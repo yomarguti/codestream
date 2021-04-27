@@ -264,6 +264,25 @@ export const getPullRequestFiles = (
 	return undefined;
 };
 
+export const getPullRequestFilesFromProvider = (
+	providerId: string,
+	id: string
+) => async dispatch => {
+	try {
+		const response = await dispatch(
+			api("getPullRequestFilesChanged", {
+				pullRequestId: id
+			})
+		);
+		// JSON.stringify matches the other use of this call
+		dispatch(_addPullRequestFiles(providerId, id, JSON.stringify([]), response, undefined));
+		return response;
+	} catch (error) {
+		logError(`failed to get pullRequest files from provider: ${error}`, { providerId, id });
+	}
+	return undefined;
+};
+
 export const getMyPullRequests = (
 	providerId: string,
 	queries: string[],
@@ -320,14 +339,12 @@ export const clearPullRequestCommits = (providerId: string, id: string) =>
 
 export const getPullRequestCommitsFromProvider = (
 	providerId: string,
-	id: string,
-	metadata: any
+	id: string
 ) => async dispatch => {
 	try {
 		const response = await HostApi.instance.send(FetchThirdPartyPullRequestCommitsType, {
 			providerId,
-			pullRequestId: id,
-			metadata: metadata
+			pullRequestId: id
 		});
 		dispatch(_addPullRequestCommits(providerId, id, response));
 		return response;

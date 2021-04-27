@@ -7,12 +7,19 @@ import { useSelector, useDispatch } from "react-redux";
 import { CodeStreamState } from "../store";
 import { FileStatus } from "@codestream/protocols/api";
 import { LoadingMessage } from "../src/components/LoadingMessage";
-import { getPullRequestCommits, getPullRequestFiles } from "../store/providerPullRequests/actions";
+import {
+	getPullRequestCommits,
+	getPullRequestFiles,
+	getPullRequestFilesFromProvider
+} from "../store/providerPullRequests/actions";
 import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
 import {
+	ChangeDataType,
+	DidChangeDataNotificationType,
 	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestPullRequest
 } from "@codestream/protocols/agent";
+import { HostApi } from "../webview-api";
 
 const STATUS_MAP = {
 	modified: FileStatus.modified
@@ -114,6 +121,19 @@ export const PullRequestFilesChangedTab = (props: {
 				getPullRequestFiles(pr.providerId, derivedState.currentPullRequestId!)
 			);
 			_mapData(data);
+
+			const disposable = HostApi.instance.on(DidChangeDataNotificationType, async (e: any) => {
+				if (e.type === ChangeDataType.Commits) {
+					setIsLoading(true);
+					const data = await dispatch(
+						getPullRequestFilesFromProvider(pr.providerId, derivedState.currentPullRequestId!)
+					);
+					_mapData(data);
+				}
+			});
+			return () => {
+				disposable.dispose();
+			};
 		})();
 	});
 

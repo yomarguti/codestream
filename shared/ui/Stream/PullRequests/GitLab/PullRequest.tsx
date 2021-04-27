@@ -46,8 +46,10 @@ import { PullRequestFinishReview } from "../../PullRequestFinishReview";
 import Timestamp from "../../Timestamp";
 import {
 	api,
+	getPullRequestCommitsFromProvider,
 	getPullRequestConversations,
-	getPullRequestConversationsFromProvider
+	getPullRequestConversationsFromProvider,
+	getPullRequestFilesFromProvider
 } from "../../../store/providerPullRequests/actions";
 import { HostApi } from "../../../webview-api";
 import { clearCurrentPullRequest, setCurrentPullRequest } from "../../../store/context/actions";
