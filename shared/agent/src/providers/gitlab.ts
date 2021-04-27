@@ -3316,6 +3316,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			iid: iid.toString(),
 			last: last
 		})) as GitLabMergeRequestWrapper).project?.mergeRequest.discussions.nodes;
+		this.ensureAvatarAbsolutePathRecurse(lastDiscussions);
 		return lastDiscussions;
 	}
 
@@ -3485,14 +3486,20 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return author;
 	}
 
-	private ensureAvatarAbsolutePathRecurse(obj: any) {
+	private ensureAvatarAbsolutePathRecurse(obj: any | any[]) {
 		if (!obj) return;
-		for (const k in obj) {
-			if (typeof obj[k] === "object") {
-				this.ensureAvatarAbsolutePathRecurse(obj[k]);
-			} else if (k === "avatarUrl") {
-				if (obj?.avatarUrl?.indexOf("/") === 0) {
-					obj.avatarUrl = `${this.baseWebUrl}${obj.avatarUrl}`;
+		if (Array.isArray(obj)) {
+			obj.forEach(o => {
+				this.ensureAvatarAbsolutePathRecurse(o);
+			});
+		} else {
+			for (const k in obj) {
+				if (typeof obj[k] === "object") {
+					this.ensureAvatarAbsolutePathRecurse(obj[k]);
+				} else if (k === "avatarUrl") {
+					if (obj?.avatarUrl?.indexOf("/") === 0) {
+						obj.avatarUrl = `${this.baseWebUrl}${obj.avatarUrl}`;
+					}
 				}
 			}
 		}
