@@ -2339,8 +2339,22 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const noteId = request.id;
 		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
 
+		let directives: Directive[] = [];
 		if (request.isPending) {
-			await this.gitLabReviewStore.deleteComment(new GitLabId(projectFullPath, iid), request.id);
+			const review = await this.gitLabReviewStore.deleteComment(
+				new GitLabId(projectFullPath, iid),
+				request.id
+			);
+			if (review?.comments?.length === 0) {
+				directives.push({
+					type: "removePendingReview",
+					data: null
+				});
+			}
+			directives.push({
+				type: "updatePendingReviewCommentsCount",
+				data: -1
+			});
 		} else {
 			const query = `
 				mutation DestroyNote($id:ID!) {
@@ -2357,34 +2371,35 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			});
 		}
 
-		const directives: Directives = {
-			directives: [
-				{
-					type: "updatePullRequest",
-					data: {
-						updatedAt: Dates.toUtcIsoNow()
-					}
-				},
-				{
-					type: "removeNode",
-					data: {
-						id: request.id
-					}
-				},
-				{
-					type: "updateReviewCommentsCount",
-					data: -1
+		directives = directives.concat([
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: Dates.toUtcIsoNow()
 				}
-			]
+			},
+			{
+				type: "removeNode",
+				data: {
+					id: request.id
+				}
+			},
+			{
+				type: "updateReviewCommentsCount",
+				data: -1
+			}
+		]);
+		const directivesResponse: Directives = {
+			directives: directives
 		};
 
-		this.updateCache(request.pullRequestId, directives);
+		this.updateCache(request.pullRequestId, directivesResponse);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: id,
 			commentId: noteId
 		});
 
-		return directives;
+		return directivesResponse;
 	}
 
 	@log()
@@ -3713,6 +3728,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						(pr as any)[key] = directive.data[key];
 					}
 				}
+			} else if (directive.type === "updatePendingReviewCommentsCount") {
+				// ensure no negatives
+				if (pr.pendingReview && pr.pendingReview.comments) {
+					pr.pendingReview.comments.totalCount = Math.max(
+						(pr.pendingReview.comments.totalCount || 0) + directive.data,
+						0
+					);
+				}
 			} else if (directive.type === "updateReviewCommentsCount") {
 				// ensure no negatives
 				pr.userDiscussionsCount = Math.max((pr.userDiscussionsCount || 0) + directive.data, 0);
@@ -3879,12 +3902,13 @@ class GitLabReviewStore {
 					contents: JSON.stringify(review)
 				});
 			} else {
-				// we aren't left with any comments.. just delete the file
+				// if we aren't left with any comments... just delete the review/file
 				await this.deleteReview(id);
 			}
+			return review;
 		}
 
-		return true;
+		return undefined;
 	}
 
 	mapToDiscussionNode(_: any, user: GitLabCurrentUser): DiscussionNode {
@@ -3899,6 +3923,13 @@ class GitLabReviewStore {
 				nodes: [
 					{
 						_pending: true,
+						userPermissions: {
+							adminNote: true,
+							readNote: true,
+							resolveNote: true,
+							awardEmoji: true,
+							createNote: true
+						},
 						id: id,
 						author: {
 							name: user.name,

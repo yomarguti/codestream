@@ -90,7 +90,7 @@ export interface Note {
 		login: string;
 		avatarUrl: string;
 	};
-	/* backward compat */
+	/* cross-compatibility property with GitHub */
 	databaseId?: number | string;
 	state?: string;
 	system?: boolean;
@@ -151,6 +151,13 @@ export interface Note {
 			newLine: string;
 		};
 	}[];
+	userPermissions: {
+		adminNote?: boolean;
+		readNote?: boolean;
+		resolveNote?: boolean;
+		awardEmoji?: boolean;
+		createNote?: boolean;
+	};
 }
 
 export interface DiscussionNode {

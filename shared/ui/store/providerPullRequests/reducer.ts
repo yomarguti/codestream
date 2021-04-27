@@ -332,6 +332,14 @@ export function reduceProviderPullRequests(
 									(pr as any)[key] = directive.data[key];
 								}
 							}
+						} else if (directive.type === "updatePendingReviewCommentsCount") {
+							// ensure no negatives
+							if (pr.pendingReview && pr.pendingReview.comments) {
+								pr.pendingReview.comments.totalCount = Math.max(
+									(pr.pendingReview.comments.totalCount || 0) + directive.data,
+									0
+								);
+							}
 						} else if (directive.type === "updateReviewCommentsCount") {
 							// ensure no negatives
 							pr.userDiscussionsCount = Math.max(

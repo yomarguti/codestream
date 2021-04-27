@@ -24,6 +24,7 @@ export interface Directive {
 		| "updateNode"
 		| "updateNodes"
 		| "updatePullRequest"
+		| "updatePendingReviewCommentsCount"
 		| "updatePullRequestReview"
 		| "updatePullRequestReviewers"
 		| "updatePullRequestReviewCommentNode"

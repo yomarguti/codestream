@@ -606,6 +606,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		id: string;
 		login: string;
 		avatarUrl: string;
+		viewerCanDelete?: boolean;
 	};
 	supports?: {
 		version: {
