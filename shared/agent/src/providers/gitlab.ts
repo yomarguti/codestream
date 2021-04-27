@@ -1390,6 +1390,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				providerVersion
 			);
 
+			if (response.project.mergeRequest.description) {
+				response.project.mergeRequest.description = this.enhanceDescription(
+					response.project.mergeRequest.description,
+					projectFullPath
+				);
+			}
+
 			this._pullRequestCache.set(request.pullRequestId, response);
 		} catch (ex) {
 			Logger.error(ex, "getMergeRequest", {
@@ -2055,7 +2062,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							updatedAt: Dates.toUtcIsoNow(),
 							title: body.title,
 							workInProgress: body.work_in_progress,
-							description: body.description,
+							description: this.enhanceDescription(request.description, projectFullPath),
 							targetBranch: body.target_branch,
 							assignees: {
 								nodes: body.assignees.map((assignee: any) => {
@@ -3462,6 +3469,24 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		} catch (ex) {
 			return [];
 		}
+	}
+
+	/**
+	 * Adds fully-qualified URLs for a merge request description's markdown.
+	 * Only required when sending to the webview
+	 *
+	 * @private
+	 * @param {string} description
+	 * @param {string} projectFullPath
+	 * @return {*}
+	 * @memberof GitLabProvider
+	 */
+	private enhanceDescription(description: string, projectFullPath: string) {
+		if (!description || !projectFullPath) return description;
+
+		return description.replace(/\[.+?\]\((\/uploads\/.+?)\)/g, (match, group1) => {
+			return match.replace(group1, `${this.baseWebUrl}/${projectFullPath}${group1}`);
+		});
 	}
 
 	private avatarUrl(url: string) {
