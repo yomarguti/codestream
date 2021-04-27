@@ -500,13 +500,13 @@ export class GitService implements IGitService, Disposable {
 		return data;
 	}
 
-	async getHeadRevision(repoPath: string, reference: string): Promise<string | undefined> {
+	async getHeadRevision(repoPath: string, reference: string): Promise<string[]> {
 		try {
 			const data = await git({ cwd: repoPath }, "show-ref", "-s", reference);
-			return data.trim();
+			return data.trim().split("\n");
 		} catch (ex) {
 			Logger.warn(ex);
-			return undefined;
+			return [];
 		}
 	}
 
@@ -520,8 +520,8 @@ export class GitService implements IGitService, Disposable {
 		const references = (await repo?.getDefaultRemoteBranchReferences()) || [];
 
 		for (const reference of references) {
-			const revision = reference && (await this.getHeadRevision(repoPath, reference));
-			if (revision) revisions.add(revision);
+			const headRevisions = reference && (await this.getHeadRevision(repoPath, reference));
+			if (headRevisions) headRevisions.forEach(hr => revisions.add(hr));
 		}
 
 		return Array.from(revisions);
