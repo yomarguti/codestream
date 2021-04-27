@@ -3971,7 +3971,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		commentId: string;
 		text: string;
 	}): Promise<Directives> {
-		// https://developer.github.com/v3/pulls/comments/#create-a-reply-for-a-review-comment
+		// https://docs.github.com/en/rest/reference/pulls#create-a-reply-for-a-review-comment
 		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
 		const data = await this.restPost<any, any>(
 			`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/comments/${request.commentId}/replies`,
