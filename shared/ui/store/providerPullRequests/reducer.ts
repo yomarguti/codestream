@@ -476,6 +476,12 @@ export function reduceProviderPullRequests(
 							}
 						} else if (directive.type === "removePendingReview") {
 							pr.pendingReview = undefined;
+						} else if (directive.type === "removeRequestedReviewer") {
+							if (pr.reviewRequests?.nodes) {
+								pr.reviewRequests.nodes = pr.reviewRequests.nodes.filter(
+									_ => _.requestedReviewer?.login !== directive.data.login
+								);
+							}
 						} else if (directive.type === "addPendingReview") {
 							if (!directive.data) continue;
 							pr.pendingReview = directive.data;

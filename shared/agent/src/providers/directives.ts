@@ -14,6 +14,7 @@ export interface Directive {
 		| "removeNode"
 		| "removePendingReview"
 		| "removePullRequestReview"
+		| "removeRequestedReviewer"
 		| "removeReaction"
 		| "removeApprovedBy"
 		| "resolveReviewThread"
