@@ -3502,7 +3502,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	private toKeyValuePair(q: string, currentUser: GitLabCurrentUser) {
-		const kvp = q.split(":");
+		const kvp = q.split(/:|=/);
 		let value = kvp[1];
 		if (value === "@me" && currentUser) {
 			value = currentUser.login;
