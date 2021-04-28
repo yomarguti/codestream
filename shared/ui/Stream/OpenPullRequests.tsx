@@ -230,6 +230,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					? true
 					: preferences.pullRequestQueryShowAllRepos,
 			hideLabels: preferences.pullRequestQueryHideLabels,
+			hideDescriptions: preferences.pullRequestQueryHideDescriptions,
 			prLabel: getPRLabel(state),
 			pullRequestProviderHidden: preferences.pullRequestProviderHidden || EMPTY_HASH_2
 		};
@@ -566,6 +567,15 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				dispatch(setUserPreference(["pullRequestQueryShowAllRepos"], !derivedState.allRepos))
 		},
 		{
+			label: "Show Descriptions",
+			key: "show-descriptions",
+			checked: !derivedState.hideDescriptions,
+			action: () =>
+				dispatch(
+					setUserPreference(["pullRequestQueryHideDescriptions"], !derivedState.hideDescriptions)
+				)
+		},
+		{
 			label: "Show Labels",
 			key: "show-labels",
 			checked: !derivedState.hideLabels,
@@ -746,6 +756,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 																	))}
 																</span>
 															)}
+														{!derivedState.hideDescriptions && (
+															<span className="subtle">{pr.bodyText || pr.body}</span>
+														)}
 													</div>
 													<div className="icons">
 														<span
@@ -820,6 +833,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 																))}
 															</span>
 														)}
+													{!derivedState.hideDescriptions && (
+														<span className="subtle">{pr.description}</span>
+													)}
 												</div>
 												<div className="icons">
 													<span
