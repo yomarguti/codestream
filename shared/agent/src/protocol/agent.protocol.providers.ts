@@ -606,6 +606,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		id: string;
 		login: string;
 		avatarUrl: string;
+		viewerCanDelete?: boolean;
 	};
 	supports?: {
 		version: {
@@ -672,7 +673,6 @@ export const FetchThirdPartyPullRequestRequestType = new RequestType<
 export interface FetchThirdPartyPullRequestCommitsRequest {
 	providerId: string;
 	pullRequestId: string;
-	metadata?: any;
 }
 
 export interface FetchThirdPartyPullRequestCommitsResponse {

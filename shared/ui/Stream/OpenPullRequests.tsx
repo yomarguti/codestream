@@ -733,16 +733,19 @@ export const OpenPullRequests = React.memo((props: Props) => {
 														<span>
 															#{pr.number} {pr.title}
 														</span>
-														{pr.labels && pr.labels.nodes && pr.labels.nodes.length > 0 && (
-															<span className="cs-tag-container">
-																{pr.labels.nodes.map((_, index) => (
-																	<Tag
-																		key={index}
-																		tag={{ label: _?.name, color: `#${_?.color}` }}
-																	/>
-																))}
-															</span>
-														)}
+														{pr.labels &&
+															pr.labels.nodes &&
+															pr.labels.nodes.length > 0 &&
+															!derivedState.hideLabels && (
+																<span className="cs-tag-container">
+																	{pr.labels.nodes.map((_, index) => (
+																		<Tag
+																			key={index}
+																			tag={{ label: _?.name, color: `#${_?.color}` }}
+																		/>
+																	))}
+																</span>
+															)}
 														<span className="subtle">{pr.bodyText || pr.body}</span>
 													</div>
 													<div className="icons">

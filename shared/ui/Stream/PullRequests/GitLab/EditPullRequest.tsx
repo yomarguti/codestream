@@ -6,6 +6,7 @@ import styled from "styled-components";
 import Icon from "../../Icon";
 import { Button } from "../../../src/components/Button";
 import { Link } from "../../Link";
+import { replaceHtml } from "../../../utils";
 import { PRBranch, PRError } from "../../PullRequestComponents";
 import { api } from "../../../store/providerPullRequests/actions";
 import MessageInput from "../../MessageInput";
@@ -126,7 +127,7 @@ export const EditPullRequest = props => {
 		await dispatch(
 			api("updatePullRequest", {
 				title,
-				description,
+				description: replaceHtml(description),
 				targetBranch,
 				labels: labelsField.map(_ => _.title).join(","),
 				availableLabels: availableLabels,

@@ -282,16 +282,24 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 				})}
 			{item.state !== "PENDING" && (
 				<>
-					<PullRequestReplyComment
-						pr={pr}
-						mode={props.mode}
-						/* GitLab-specific */
-						parentId={comment?.discussion?.id}
-						databaseId={comment.databaseId}
-						isOpen={openComments[comment.databaseId]}
-						__onDidRender={__onDidRender}
-					/>
-					<div style={{ height: "15px" }}></div>
+					{/* GitHub doesn't allow replies on existing comments
+				when there is a pending review */}
+					{pr.providerId.includes("gitlab") ||
+						(!pr.pendingReview && (
+							<>
+								<PullRequestReplyComment
+									pr={pr}
+									mode={props.mode}
+									/* GitLab-specific */
+									parentId={comment?.discussion?.id}
+									databaseId={comment.databaseId}
+									isOpen={openComments[comment.databaseId]}
+									__onDidRender={__onDidRender}
+								/>
+								<div style={{ height: "15px" }}></div>
+							</>
+						))}
+
 					{comment.isResolved && comment.viewerCanUnresolve && (
 						<PRButtonRow className="align-left border-top">
 							<Button

@@ -297,7 +297,7 @@ export const RightActionBar = (props: {
 
 	const setAssignees = async (ids: number[]) => {
 		setIsLoadingMessage("Setting Assignee...");
-		dispatch(api("setAssigneeOnPullRequest", { ids }));
+		await dispatch(api("setAssigneeOnPullRequest", { ids }));
 		setIsLoadingMessage("");
 	};
 
@@ -367,7 +367,7 @@ export const RightActionBar = (props: {
 
 	const setReviewers = async (ids: number[]) => {
 		setIsLoadingMessage("Updating Reviewer...");
-		dispatch(api("setReviewersOnPullRequest", { ids }));
+		await dispatch(api("setReviewersOnPullRequest", { ids }));
 		setIsLoadingMessage("");
 	};
 
@@ -416,7 +416,7 @@ export const RightActionBar = (props: {
 
 	const setMilestone = async (id: string) => {
 		setIsLoadingMessage(id ? "Setting Milestone..." : "Clearing Milestone...");
-		dispatch(
+		await dispatch(
 			api("toggleMilestoneOnPullRequest", {
 				milestoneId: id
 			})
@@ -510,9 +510,9 @@ export const RightActionBar = (props: {
 					{
 						label: "Unlock",
 						className: "delete",
-						action: () => {
+						action: async () => {
 							setIsLoadingMessage("Unlocking...");
-							dispatch(api("unlockPullRequest", {}));
+							await dispatch(api("unlockPullRequest", {}));
 							setIsLoadingMessage("");
 						}
 					}
@@ -530,9 +530,9 @@ export const RightActionBar = (props: {
 					{
 						label: "Lock",
 						className: "delete",
-						action: () => {
+						action: async () => {
 							setIsLoadingMessage("Locking...");
-							dispatch(api("lockPullRequest", {}));
+							await dispatch(api("lockPullRequest", {}));
 							setIsLoadingMessage("");
 						}
 					}

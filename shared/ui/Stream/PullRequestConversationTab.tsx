@@ -624,7 +624,7 @@ export const PullRequestConversationTab = (props: {
 
 	const setProject = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding to Project..." : "Removing from Project...");
-		dispatch(
+		await dispatch(
 			api("toggleProjectOnPullRequest", {
 				projectId: id,
 				onOff
@@ -675,7 +675,7 @@ export const PullRequestConversationTab = (props: {
 
 	const setMilestone = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Milestone..." : "Clearing Milestone...");
-		dispatch(
+		await dispatch(
 			api("toggleMilestoneOnPullRequest", {
 				milestoneId: id,
 				onOff

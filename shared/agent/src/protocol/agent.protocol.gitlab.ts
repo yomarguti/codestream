@@ -90,7 +90,7 @@ export interface Note {
 		login: string;
 		avatarUrl: string;
 	};
-	/* backward compat */
+	/* cross-compatibility property with GitHub */
 	databaseId?: number | string;
 	state?: string;
 	system?: boolean;
@@ -151,6 +151,13 @@ export interface Note {
 			newLine: string;
 		};
 	}[];
+	userPermissions: {
+		adminNote?: boolean;
+		readNote?: boolean;
+		resolveNote?: boolean;
+		awardEmoji?: boolean;
+		createNote?: boolean;
+	};
 }
 
 export interface DiscussionNode {
@@ -208,7 +215,9 @@ export interface GitLabMergeRequest {
 	 * this will be undefined for older GL instances
 	 */
 	approvalsAuthorCanApprove?: boolean;
+	/* this might not exist in all editions via the graph query*/
 	author: GitLabUser;
+	/* this might not exist in all editions via the graph query*/
 	assignees: {
 		nodes: GitLabUser[];
 	};
@@ -253,7 +262,8 @@ export interface GitLabMergeRequest {
 	};
 	merged: boolean;
 	mergeableDiscussionsState: boolean;
-	mergedAt: string;
+	/* this might not exist in all editions*/
+	mergedAt?: string;
 	mergeWhenPipelineSucceeds: boolean;
 	milestone?: {
 		title: string;
@@ -408,8 +418,10 @@ export interface GitLabMergeRequest {
 			version: string;
 		};
 		reviewers?: boolean;
+		resolvingNotes?: boolean;
 		// approvalsRequired?: boolean;
 		approvedBy?: boolean;
+		approvals?: boolean;
 		currentUserTodos?: boolean;
 	};
 }
