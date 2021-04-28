@@ -365,6 +365,7 @@ export const PullRequest = () => {
 		setSavingTitle(true);
 		await dispatch(api("updatePullRequestTitle", { title }));
 		setSavingTitle(false);
+		setIsLoadingMessage("");
 	};
 
 	const getOpenRepos = async () => {
