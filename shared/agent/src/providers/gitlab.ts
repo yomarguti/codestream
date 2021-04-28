@@ -2541,7 +2541,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		const projectFullPathEncoded = encodeURIComponent(projectFullPath);
-		const url = `/projects/${projectFullPathEncoded}/merge_requests/${iid}/commits`;
+		const url = `/projects/${projectFullPathEncoded}/merge_requests/${iid}/commits?per_page=100`;
 		const query = await this.restGet<
 			{
 				author_email: string;
