@@ -746,7 +746,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 																	))}
 																</span>
 															)}
-														<span className="subtle">{pr.bodyText || pr.body}</span>
 													</div>
 													<div className="icons">
 														<span
@@ -821,7 +820,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 																))}
 															</span>
 														)}
-													<span className="subtle">{pr.description}</span>
 												</div>
 												<div className="icons">
 													<span
