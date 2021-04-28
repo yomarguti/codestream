@@ -46,6 +46,8 @@ import { PullRequestFinishReview } from "../../PullRequestFinishReview";
 import Timestamp from "../../Timestamp";
 import {
 	api,
+	clearPullRequestCommits,
+	clearPullRequestFiles,
 	getPullRequestCommitsFromProvider,
 	getPullRequestConversations,
 	getPullRequestConversationsFromProvider,
@@ -318,6 +320,7 @@ export const PullRequest = () => {
 	const [savingTitle, setSavingTitle] = useState(false);
 	const [title, setTitle] = useState("");
 	const [finishReviewOpen, setFinishReviewOpen] = useState(false);
+	const [dynamicKey, setDynamicKey] = useState("");
 
 	const breakpoints = {
 		auto: "630px",
@@ -382,7 +385,7 @@ export const PullRequest = () => {
 
 			_didChangeDataNotification = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
 				if (e.type === ChangeDataType.Commits) {
-					fetch("Updating...");
+					reload("Updating...");
 				}
 			});
 			setDidMount(true);
@@ -493,6 +496,28 @@ export const PullRequest = () => {
 			)
 		)) as any;
 		_assignState(response);
+	};
+
+	const reload = async (message?: string) => {
+		console.log("MergeRequest is reloading");
+		fetch(message);
+
+		// just clear the files and commits data -- it will be fetched if necessary (since it has its own api call)
+		dispatch(
+			clearPullRequestFiles(
+				derivedState.currentPullRequestProviderId!,
+				derivedState.currentPullRequestId!
+			)
+		);
+		dispatch(
+			clearPullRequestCommits(
+				derivedState.currentPullRequestProviderId!,
+				derivedState.currentPullRequestId!
+			)
+		);
+		// we can force the child components to update
+		// by changing part of its key attribute
+		setDynamicKey(new Date().getTime().toString());
 	};
 
 	const __onDidRender = functions => {
@@ -890,10 +915,10 @@ export const PullRequest = () => {
 									{order === "oldest" && bottomComment}
 								</>
 							)}
-							{activeTab === 2 && <PullRequestCommitsTab pr={pr} />}
+							{activeTab === 2 && <PullRequestCommitsTab key={"commits-" + dynamicKey} pr={pr} />}
 							{activeTab === 4 && (
 								<PullRequestFilesChangedTab
-									key="files-changed"
+									key={"files-changed-" + dynamicKey}
 									pr={pr as any}
 									setIsLoadingMessage={setIsLoadingMessage}
 								/>
@@ -915,7 +940,7 @@ export const PullRequest = () => {
 					rightOpen={rightOpen}
 					setRightOpen={setRightOpen}
 					setIsLoadingMessage={setIsLoadingMessage}
-					fetch={fetch}
+					onRefreshClick={reload}
 				/>
 			</PullRequestRoot>
 		</ThemeProvider>

@@ -112,6 +112,7 @@ export const PullRequestFilesChangedTab = (props: {
 
 	useDidMount(() => {
 		setIsLoading(true);
+		let disposable;
 		(async () => {
 			const prCommitsData = await dispatch(
 				getPullRequestCommits(pr.providerId, derivedState.currentPullRequestId!)
@@ -122,7 +123,7 @@ export const PullRequestFilesChangedTab = (props: {
 			);
 			_mapData(data);
 
-			const disposable = HostApi.instance.on(DidChangeDataNotificationType, async (e: any) => {
+			disposable = HostApi.instance.on(DidChangeDataNotificationType, async (e: any) => {
 				if (e.type === ChangeDataType.Commits) {
 					setIsLoading(true);
 					const data = await dispatch(
@@ -131,10 +132,10 @@ export const PullRequestFilesChangedTab = (props: {
 					_mapData(data);
 				}
 			});
-			return () => {
-				disposable.dispose();
-			};
 		})();
+		return () => {
+			disposable?.dispose();
+		};
 	});
 
 	const commitBased = useMemo(() => prCommitsRange.length > 0, [prCommitsRange]);
