@@ -1510,10 +1510,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		text: string;
 	}): Promise<Directives> {
 		if (!request.parentId) throw new Error("ParentId missing");
+		const providerVersion = await this.getVersion();
 
 		const { id } = this.parseId(request.pullRequestId);
+		let noteableId = "NoteableID";
+		let discussionId = "DiscussionID";
+		if (semver.lt(providerVersion.version, "13.6.4")) {
+			noteableId = discussionId = "ID";
+		}
 		const response = await this.query<any>(
-			`mutation createNote($noteableId: NoteableID!, $discussionId: DiscussionID!, $body: String!) {
+			`mutation createNote($noteableId: ${noteableId}!, $discussionId: ${discussionId}!, $body: String!) {
 			createNote(input: {noteableId: $noteableId, discussionId: $discussionId, body: $body}) {
 			  clientMutationId
 			  note {
@@ -1531,8 +1537,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					createdAt
 				  }
 				  id
-				  resolvable
-				  resolved
+				  resolvable				   
 				  updatedAt
 				  userPermissions {
 					adminNote
@@ -1566,7 +1571,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					type: "updateReviewCommentsCount",
 					data: 1
 				},
-				{ type: "addReply", data: response.createNote.note }
+				// "resolved" doesn't exist on GL 12.10
+				{ type: "addReply", data: { ...response.createNote.note, resolved: false } }
 			]
 		});
 	}
