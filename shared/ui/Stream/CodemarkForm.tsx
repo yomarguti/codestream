@@ -706,6 +706,24 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.setState(state => ({ crossPostMessage: !state.crossPostMessage }));
 	};
 
+	handlePullRequestKeyboardSubmit = async (e?: React.SyntheticEvent) => {
+		if (this.props.error != null && this.props.error !== "") {
+			return;
+		}
+
+		const hasExistingPullRequestReview = !!(
+			this.state.codeBlocks && !!this.state.codeBlocks[0]?.context?.pullRequest?.pullRequestReviewId
+		);
+
+		if (!hasExistingPullRequestReview) {
+			this.handleClickSubmit(e);
+		} else if (this.props.textEditorUriHasPullRequestContext && this.state.isInsidePrChangeSet) {
+			this.setState({ isProviderReview: true }, () => {
+				this.handleClickSubmit(e);
+			});
+		}
+	};
+
 	handleClickSubmit = async (event?: React.SyntheticEvent) => {
 		event && event.preventDefault();
 		if (this.state.isLoading || this.state.isReviewLoading) return;
@@ -1571,7 +1589,11 @@ class CodemarkForm extends React.Component<Props, State> {
 				shouldShowRelatableCodemark={codemark =>
 					this.props.editingCodemark ? codemark.id !== this.props.editingCodemark.id : true
 				}
-				onSubmit={this.props.currentPullRequestId ? undefined : this.handleClickSubmit}
+				onSubmit={
+					this.props.currentPullRequestId
+						? this.handlePullRequestKeyboardSubmit
+						: this.handleClickSubmit
+				}
 				selectedTags={this.state.selectedTags}
 				relatedCodemarkIds={
 					this.props.textEditorUriHasPullRequestContext ? undefined : this.state.relatedCodemarkIds
