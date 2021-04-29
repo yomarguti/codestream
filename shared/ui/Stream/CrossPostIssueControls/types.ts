@@ -25,6 +25,7 @@ export interface ProviderDisplay {
 	customPullRequestFilterExample?: string;
 
 	supportsPRManagement?: boolean;
+	versionMinimum?: string;
 }
 
 export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
@@ -129,7 +130,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customPullRequestFilterExample: 'Example: "state:opened scope:created_by_me" ',
 		customPullRequestFilterHelpLink: "https://docs.gitlab.com/ee/api/merge_requests.html",
 		supportsStartWork: true,
-		supportsPRManagement: true
+		supportsPRManagement: true,
+		versionMinimum: "12.10"
 	},
 	jira: {
 		displayName: "Jira",
