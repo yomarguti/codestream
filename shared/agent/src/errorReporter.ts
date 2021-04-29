@@ -8,7 +8,9 @@ import {
 	ReportBreadcrumbRequest,
 	ReportBreadcrumbRequestType,
 	ReportMessageRequest,
-	ReportMessageRequestType
+	ReportMessageRequestType,
+	WebviewErrorRequest,
+	WebviewErrorRequestType
 } from "./protocol/agent.protocol";
 import { CodeStreamSession, SessionStatus } from "./session";
 import { lsp, lspHandler } from "./system";
@@ -123,5 +125,10 @@ export class ErrorReporter {
 			level: request.level ? Severity.fromString(request.level) : undefined,
 			category: request.category
 		});
+	}
+
+	@lspHandler(WebviewErrorRequestType)
+	webviewError(request: WebviewErrorRequest) {
+		Logger.log(`Webview error: ${request.error.message}\n${request.error.stack}`);
 	}
 }

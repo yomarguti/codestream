@@ -2498,6 +2498,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				  remaining
 				  resetAt
 				}
+				viewer { 
+					login
+				}
 				repository(name: $name, owner: $owner) {
 				  pullRequest(number: $pullRequestNumber) {
 					updatedAt
@@ -2616,6 +2619,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		  `,
 			ownerData
 		)) as {
+			viewer: {
+				login: string;
+			};
 			repository: {
 				pullRequest: {
 					reviewThreads: {
@@ -2677,7 +2683,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						})
 					}
 				},
-				{ type: "removePendingReview", data: null }
+				{ type: "removePendingReview", data: null },
+				{
+					type: "removeRequestedReviewer",
+					data: {
+						login: updatedPullRequest.viewer?.login
+					}
+				}
 			]
 		});
 	}
@@ -3959,7 +3971,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		commentId: string;
 		text: string;
 	}): Promise<Directives> {
-		// https://developer.github.com/v3/pulls/comments/#create-a-reply-for-a-review-comment
+		// https://docs.github.com/en/rest/reference/pulls#create-a-reply-for-a-review-comment
 		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
 		const data = await this.restPost<any, any>(
 			`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/comments/${request.commentId}/replies`,
@@ -5052,6 +5064,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 							}:>=3.0.0]`)}
 					}
 					headRefName
+					headRepositoryOwner {
+						login
+					}
+					headRepository {
+						isFork
+						name
+					}
 					headRefOid
 					labels(first: 10) {
 					  nodes {
@@ -5182,7 +5201,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				pullRequestNumber: pullRequestNumber,
 				cursor: cursor
 			})) as FetchThirdPartyPullRequestResponse;
-
 			if (response.rateLimit) {
 				this._prTimelineQueryRateLimit = {
 					cost: response.rateLimit.cost,
@@ -5515,6 +5533,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				}
 			} else if (directive.type === "removePendingReview") {
 				pr.pendingReview = undefined;
+			} else if (directive.type === "removeRequestedReviewer") {
+				if (pr.reviewRequests?.nodes) {
+					pr.reviewRequests.nodes = pr.reviewRequests.nodes.filter(
+						_ => _.requestedReviewer?.login !== directive.data.login
+					);
+				}
 			} else if (directive.type === "addReview") {
 				if (!directive.data) continue;
 				if (pr.reviews.nodes.find(_ => _.id === directive.data.id) == null) {

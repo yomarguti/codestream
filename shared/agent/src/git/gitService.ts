@@ -500,13 +500,13 @@ export class GitService implements IGitService, Disposable {
 		return data;
 	}
 
-	async getHeadRevision(repoPath: string, reference: string): Promise<string | undefined> {
+	async getHeadRevision(repoPath: string, reference: string): Promise<string[]> {
 		try {
 			const data = await git({ cwd: repoPath }, "show-ref", "-s", reference);
-			return data.trim();
+			return data.trim().split("\n");
 		} catch (ex) {
 			Logger.warn(ex);
-			return undefined;
+			return [];
 		}
 	}
 
@@ -520,8 +520,8 @@ export class GitService implements IGitService, Disposable {
 		const references = (await repo?.getDefaultRemoteBranchReferences()) || [];
 
 		for (const reference of references) {
-			const revision = reference && (await this.getHeadRevision(repoPath, reference));
-			if (revision) revisions.add(revision);
+			const headRevisions = reference && (await this.getHeadRevision(repoPath, reference));
+			if (headRevisions) headRevisions.forEach(hr => revisions.add(hr));
 		}
 
 		return Array.from(revisions);
@@ -676,7 +676,7 @@ export class GitService implements IGitService, Disposable {
 				"log",
 				"-M",
 				"-n1",
-				`--format=${GitLogParser.defaultFormat}`,
+				`--format='${GitLogParser.defaultFormat}'`,
 				ref,
 				"--"
 			);
@@ -804,7 +804,7 @@ export class GitService implements IGitService, Disposable {
 				{ cwd: repo.path },
 				"log",
 				`-n${limit}`,
-				`--format='${GitLogParser.defaultFormat}`,
+				`--format='${GitLogParser.defaultFormat}'`,
 				"--"
 			);
 			return GitLogParser.parse(commitsData.trim(), repo.path);
@@ -825,7 +825,7 @@ export class GitService implements IGitService, Disposable {
 				"log",
 				branch,
 				"-n100",
-				`--format='${GitLogParser.defaultFormat}`,
+				`--format='${GitLogParser.defaultFormat}'`,
 				"--"
 			);
 			const commits = GitLogParser.parse(commitsData.trim(), repoPath);
@@ -928,7 +928,7 @@ export class GitService implements IGitService, Disposable {
 					{ cwd: repoPath },
 					"log",
 					"@{push}..",
-					`--format='${GitLogParser.defaultFormat}`,
+					`--format='${GitLogParser.defaultFormat}'`,
 					"--"
 				);
 				const commits = GitLogParser.parse(data.trim(), repoPath);
@@ -1278,7 +1278,7 @@ export class GitService implements IGitService, Disposable {
 		if (fs.existsSync(fileOrFolderPath) && fs.lstatSync(fileOrFolderPath).isDirectory()) {
 			const normalizedFsPath = Strings.normalizePath(fileOrFolderPath);
 			const allRepos = await this.getRepositories();
-			repo = Array.from(allRepos).find(r => r.path === normalizedFsPath);
+			repo = Array.from(allRepos).find(r => r.path === normalizedFsPath || r.path === fileOrFolderPath);
 		} else {
 			// do NOT allow folders to get into this path, any folder not already tracked
 			// will traverse _up_ looking for additional git repos.
@@ -1359,7 +1359,9 @@ export class GitService implements IGitService, Disposable {
 			// git log --pretty=format:"%an|%aE" | sort -u
 			// and then filter out noreply.github.com (what else?)
 			const timeAgo = new Date().getTime() / 1000 - since;
-			data = (await git({ cwd: repoPath }, "log", "--pretty=format:%an|%aE", `--since=${timeAgo}`))
+			data = (
+				await git({ cwd: repoPath }, "log", "--pretty=format:'%an|%aE'", `--since=${timeAgo}`)
+			)
 				.split("\n")
 				.map(line => line.trim())
 				.filter(line => !line.match(/noreply/))
@@ -1382,7 +1384,7 @@ export class GitService implements IGitService, Disposable {
 			// git log --pretty=format:"%an|%aE" | sort -u
 			// and then filter out noreply.github.com (what else?)
 			const timeAgo = new Date().getTime() / 1000 - since;
-			(await git({ cwd: repoPath }, "log", "--pretty=format:%an|%aE", `--since=${timeAgo}`))
+			(await git({ cwd: repoPath }, "log", "--pretty=format:'%an|%aE'", `--since=${timeAgo}`))
 				.split("\n")
 				.map(line => line.trim())
 				.filter(line => !line.match(/noreply/))
@@ -1484,7 +1486,7 @@ export class GitService implements IGitService, Disposable {
 			sha,
 			`-n${limit}`,
 			"--skip=1",
-			`--format='${GitLogParser.defaultFormat}`,
+			`--format='${GitLogParser.defaultFormat}'`,
 			"--"
 		);
 		const commits = GitLogParser.parse(commitsData.trim(), repoPath);

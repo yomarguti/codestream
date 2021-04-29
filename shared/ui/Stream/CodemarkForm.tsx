@@ -706,6 +706,24 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.setState(state => ({ crossPostMessage: !state.crossPostMessage }));
 	};
 
+	handlePullRequestKeyboardSubmit = async (e?: React.SyntheticEvent) => {
+		if (this.props.error != null && this.props.error !== "") {
+			return;
+		}
+
+		const hasExistingPullRequestReview = !!(
+			this.state.codeBlocks && !!this.state.codeBlocks[0]?.context?.pullRequest?.pullRequestReviewId
+		);
+
+		if (!hasExistingPullRequestReview || !this.state.isInsidePrChangeSet) {
+			this.handleClickSubmit(e);
+		} else if (this.props.textEditorUriHasPullRequestContext && this.state.isInsidePrChangeSet) {
+			this.setState({ isProviderReview: true }, () => {
+				this.handleClickSubmit(e);
+			});
+		}
+	};
+
 	handleClickSubmit = async (event?: React.SyntheticEvent) => {
 		event && event.preventDefault();
 		if (this.state.isLoading || this.state.isReviewLoading) return;
@@ -1571,7 +1589,11 @@ class CodemarkForm extends React.Component<Props, State> {
 				shouldShowRelatableCodemark={codemark =>
 					this.props.editingCodemark ? codemark.id !== this.props.editingCodemark.id : true
 				}
-				onSubmit={this.props.currentPullRequestId ? undefined : this.handleClickSubmit}
+				onSubmit={
+					this.props.currentPullRequestId
+						? this.handlePullRequestKeyboardSubmit
+						: this.handleClickSubmit
+				}
 				selectedTags={this.state.selectedTags}
 				relatedCodemarkIds={
 					this.props.textEditorUriHasPullRequestContext ? undefined : this.state.relatedCodemarkIds
@@ -1991,7 +2013,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (this.props.multiLocation || !editingCodemark) {
 			return (
 				<div className="full-height-codemark-form">
-					<CancelButton onClick={this.cancelCompose} />
+					<CancelButton onClick={this.cancelCompose} incrementKeystrokeLevel={true} />
 					<PanelHeader
 						title={
 							this.props.currentReviewId
@@ -2184,6 +2206,14 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.state.codeBlocks[0].context.pullRequest &&
 			!!this.state.codeBlocks[0].context.pullRequest.pullRequestReviewId
 		);
+		// default to "add comment" having the keyboard shortcut when both buttons are enabled
+		const reviewTooltip = hasExistingPullRequestReview ? (
+			<span>
+				Add to review<span className="keybinding extra-pad">{modifier} ENTER</span>
+			</span>
+		) : (
+			<span>Start a review</span>
+		);
 
 		let linkWithCodeBlock = "";
 		if (this.state.linkURI) {
@@ -2201,6 +2231,8 @@ class CodemarkForm extends React.Component<Props, State> {
 				linkWithCodeBlock += "*\n```\n" + codeBlock.contents + "\n```\n";
 			}
 		}
+		const commentIsDisabled =
+			hasError || (this.state.isInsidePrChangeSet && !!hasExistingPullRequestReview);
 
 		return [
 			<form
@@ -2363,6 +2395,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								onClick={this.cancelCodemarkCompose}
 								title={this.state.copied ? "Close" : "Cancel"}
 								mode="button"
+								incrementKeystrokeLevel={true}
 							/>
 							{commentType === "link" && this.state.linkURI && !this.state.copied && (
 								<Tooltip title={"Copy Link and Code Block (Markdown)"} placement="bottom" delay={1}>
@@ -2381,7 +2414,7 @@ class CodemarkForm extends React.Component<Props, State> {
 									</Button>
 								</Tooltip>
 							)}
-							<Tooltip title={submitTip} placement="bottom" delay={1}>
+							<Tooltip title={commentIsDisabled ? null : submitTip} placement="bottom" delay={1}>
 								<Button
 									key="submit"
 									style={{
@@ -2402,9 +2435,7 @@ class CodemarkForm extends React.Component<Props, State> {
 											? this.copyPermalink
 											: this.handleClickSubmit
 									}
-									disabled={
-										hasError || (this.state.isInsidePrChangeSet && !!hasExistingPullRequestReview)
-									}
+									disabled={commentIsDisabled}
 								>
 									{commentType === "link"
 										? this.state.copied
@@ -2424,28 +2455,30 @@ class CodemarkForm extends React.Component<Props, State> {
 								</Button>
 							</Tooltip>
 							{this.props.textEditorUriHasPullRequestContext && this.state.isInsidePrChangeSet && (
-								<Button
-									key="submit-review"
-									loading={this.state.isReviewLoading}
-									disabled={hasError}
-									onClick={e => {
-										this.setState({ isProviderReview: true }, () => {
-											this.handleClickSubmit(e);
-										});
-									}}
-									style={{
-										paddingLeft: "10px",
-										paddingRight: "10px",
-										// fixed width to handle the isReviewLoading case
-										width: "auto",
-										marginRight: 0
-									}}
-									className="control-button"
-									type="submit"
-								>
-									{hasExistingPullRequestReview && <>Add to review</>}
-									{!hasExistingPullRequestReview && <>Start a review</>}
-								</Button>
+								<Tooltip title={hasError ? null : reviewTooltip} placement="bottom" delay={1}>
+									<Button
+										key="submit-review"
+										loading={this.state.isReviewLoading}
+										disabled={hasError}
+										onClick={e => {
+											this.setState({ isProviderReview: true }, () => {
+												this.handleClickSubmit(e);
+											});
+										}}
+										style={{
+											paddingLeft: "10px",
+											paddingRight: "10px",
+											// fixed width to handle the isReviewLoading case
+											width: "auto",
+											marginRight: 0
+										}}
+										className="control-button"
+										type="submit"
+									>
+										{hasExistingPullRequestReview && <>Add to review</>}
+										{!hasExistingPullRequestReview && <>Start a review</>}
+									</Button>
+								</Tooltip>
 							)}
 							{/*
 							<span className="hint">Styling with Markdown is supported</span>

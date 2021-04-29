@@ -332,6 +332,14 @@ export function reduceProviderPullRequests(
 									(pr as any)[key] = directive.data[key];
 								}
 							}
+						} else if (directive.type === "updatePendingReviewCommentsCount") {
+							// ensure no negatives
+							if (pr.pendingReview && pr.pendingReview.comments) {
+								pr.pendingReview.comments.totalCount = Math.max(
+									(pr.pendingReview.comments.totalCount || 0) + directive.data,
+									0
+								);
+							}
 						} else if (directive.type === "updateReviewCommentsCount") {
 							// ensure no negatives
 							pr.userDiscussionsCount = Math.max(
@@ -476,6 +484,12 @@ export function reduceProviderPullRequests(
 							}
 						} else if (directive.type === "removePendingReview") {
 							pr.pendingReview = undefined;
+						} else if (directive.type === "removeRequestedReviewer") {
+							if (pr.reviewRequests?.nodes) {
+								pr.reviewRequests.nodes = pr.reviewRequests.nodes.filter(
+									_ => _.requestedReviewer?.login !== directive.data.login
+								);
+							}
 						} else if (directive.type === "addPendingReview") {
 							if (!directive.data) continue;
 							pr.pendingReview = directive.data;

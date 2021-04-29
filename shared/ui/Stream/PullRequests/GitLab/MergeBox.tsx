@@ -98,7 +98,6 @@ export const MergeBox = props => {
 	};
 
 	const cancelMergeWhenPipelineSucceeds = async (e: any) => {
-		//setIsLoadingMessage("Merging...");
 		dispatch(api("cancelMergeWhenPipelineSucceeds", {}));
 	};
 
@@ -110,6 +109,7 @@ export const MergeBox = props => {
 				onOff
 			})
 		);
+		props.setIsLoadingMessage("");
 	};
 
 	if (showCommandLine) {
@@ -122,17 +122,36 @@ export const MergeBox = props => {
 				<FlexRow>
 					<Icon name="check-circle" className="bigger green-color" />
 					<div className="pad-left">
-						Merged at <Timestamp time={derivedState.pr.mergedAt} />
+						Merged at <Timestamp time={derivedState.pr.mergedAt!} />
 					</div>
 				</FlexRow>
 			</OutlineBox>
 		);
 	}
 
-	if (
-		derivedState.pr &&
-		(!derivedState.pr.userPermissions || !derivedState.pr.userPermissions.canMerge)
-	) {
+	if (!props.pr.diffRefs || !props.pr.diffRefs.headSha) {
+		return (
+			<OutlineBox>
+				<FlexRow>
+					<Icon name="alert" className="bigger" />
+					<Button className="action-button" variant="secondary" disabled>
+						Merge
+					</Button>
+					<div className="pad-left">
+						Source branch does not exist. Please restore it or use a different source branch{" "}
+						<Tooltip
+							title="If the source branch exists in your local repository, you can merge this merge request manually using the command line"
+							placement="top"
+						>
+							<Icon name="question" placement="top" />
+						</Tooltip>
+					</div>
+				</FlexRow>
+			</OutlineBox>
+		);
+	}
+
+	if (derivedState.pr?.userPermissions?.canMerge === false) {
 		return (
 			<OutlineBox>
 				<FlexRow>
@@ -311,17 +330,14 @@ export const MergeBox = props => {
 		derivedState.pipeline && derivedState.pipeline.status === "CANCELED"
 			? "destructive"
 			: mergeDisabled
-				? "secondary"
-				: "success";
+			? "secondary"
+			: "success";
 	return (
 		<OutlineBox>
 			<FlexRow>
 				<Icon name="check-circle" className={`bigger color-green`} />
 				{mergeDisabled && (
-					<Tooltip
-					title="Rebase support coming soon"
-					placement="top"
-					>
+					<Tooltip title="Rebase support coming soon" placement="top">
 						<Button
 							isLoading={isLoading}
 							variant={colorVariant}

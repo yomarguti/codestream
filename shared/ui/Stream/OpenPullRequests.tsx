@@ -230,6 +230,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					? true
 					: preferences.pullRequestQueryShowAllRepos,
 			hideLabels: preferences.pullRequestQueryHideLabels,
+			hideDescriptions: preferences.pullRequestQueryHideDescriptions,
 			prLabel: getPRLabel(state),
 			pullRequestProviderHidden: preferences.pullRequestProviderHidden || EMPTY_HASH_2
 		};
@@ -566,6 +567,15 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				dispatch(setUserPreference(["pullRequestQueryShowAllRepos"], !derivedState.allRepos))
 		},
 		{
+			label: "Show Descriptions",
+			key: "show-descriptions",
+			checked: !derivedState.hideDescriptions,
+			action: () =>
+				dispatch(
+					setUserPreference(["pullRequestQueryHideDescriptions"], !derivedState.hideDescriptions)
+				)
+		},
+		{
 			label: "Show Labels",
 			key: "show-labels",
 			checked: !derivedState.hideLabels,
@@ -733,17 +743,22 @@ export const OpenPullRequests = React.memo((props: Props) => {
 														<span>
 															#{pr.number} {pr.title}
 														</span>
-														{pr.labels && pr.labels.nodes && pr.labels.nodes.length > 0 && (
-															<span className="cs-tag-container">
-																{pr.labels.nodes.map((_, index) => (
-																	<Tag
-																		key={index}
-																		tag={{ label: _?.name, color: `#${_?.color}` }}
-																	/>
-																))}
-															</span>
+														{pr.labels &&
+															pr.labels.nodes &&
+															pr.labels.nodes.length > 0 &&
+															!derivedState.hideLabels && (
+																<span className="cs-tag-container">
+																	{pr.labels.nodes.map((_, index) => (
+																		<Tag
+																			key={index}
+																			tag={{ label: _?.name, color: `#${_?.color}` }}
+																		/>
+																	))}
+																</span>
+															)}
+														{!derivedState.hideDescriptions && (
+															<span className="subtle">{pr.bodyText || pr.body}</span>
 														)}
-														<span className="subtle">{pr.bodyText || pr.body}</span>
 													</div>
 													<div className="icons">
 														<span
@@ -818,7 +833,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 																))}
 															</span>
 														)}
-													<span className="subtle">{pr.description}</span>
+													{!derivedState.hideDescriptions && (
+														<span className="subtle">{pr.description}</span>
+													)}
 												</div>
 												<div className="icons">
 													<span

@@ -4,6 +4,7 @@ import { gate } from "../../system/decorators/gate";
 import {
 	DocumentNode,
 	FieldNode,
+	FragmentDefinitionNode,
 	OperationDefinitionNode,
 	print,
 	SelectionNode,
@@ -62,47 +63,91 @@ export class GraphqlQueryBuilder {
 	 */
 	constructor(private providerId: string) {}
 
-	private versionMatrix: any = {
-		"0.0.0": {
-			emptyQueryName: {}
-		}
+	private supportMatrix: any = {
+		"0.0.0": {}
 	};
 
-	getOrCreateSupportMatrix(queryKey: "GetPullRequest", providerVersion: ProviderVersion): any {
+	getOrCreateSupportMatrix(providerVersion: ProviderVersion): any {
 		const version = providerVersion.version;
-		if (!version || version === "0.0.0") return {};
-
-		const versionedQuery = this.versionMatrix[version];
-		if (versionedQuery) {
-			const keyedQuery = versionedQuery[queryKey];
-			if (keyedQuery) {
-				Logger.debug(
-					`GraphqlQueryStore.getOrCreateSupportMatrix ${this.providerId} version=${version} cache hit`
-				);
-				return keyedQuery;
-			}
-		}
-
-		let supports = {};
-		if (queryKey === "GetPullRequest") {
-			const isGte1380 = semver.gte(version, "13.8.0");
-			const isGte1364 = semver.gte(version, "13.6.4");
-			supports = {
-				version: providerVersion,
-				reviewers: isGte1380,
-				// approvalsRequired: isGte1380,
-				approvedBy: isGte1364,
-				currentUserTodos: isGte1364
+		if (!version || version === "0.0.0")
+			return {
+				version: providerVersion
 			};
+
+		const versionedQuery = this.supportMatrix[version];
+		if (versionedQuery) {
+			Logger.debug(
+				`GraphqlQueryBuilder.getOrCreateSupportMatrix ${this.providerId} version=${version} cache hit`
+			);
+			return versionedQuery;
 		}
 
-		this.versionMatrix[version] = this.versionMatrix[version] || {};
-		this.versionMatrix[version][queryKey] = supports;
+		const isGte1380 = semver.gte(version, "13.8.0");
+		const isGte1364 = semver.gte(version, "13.6.4");
+
+		const supports = {
+			version: providerVersion,
+			reviewers: isGte1380,
+			resolvingNotes: isGte1364,
+			// approvalsRequired: isGte1380,
+			approvals: isGte1364,
+			approvedBy: isGte1364,
+			currentUserTodos: isGte1364
+		};
+		this.supportMatrix[version] = supports;
 
 		return supports;
 	}
 
 	configuration: { [id: string]: GraphQlQueryModifier[] } = {
+		GetMergeRequestDiscussions: [
+			{
+				selector: (currentVersion: string) => semver.lt(currentVersion, "13.8.0"),
+				query: {
+					head: {
+						value: {
+							key: "discussionFragment",
+							removals: ["resolved", "resolvable", "resolvedAt", "resolvedBy"]
+						},
+						next: {
+							value: {
+								key: "notes"
+							},
+							next: {
+								value: {
+									key: "nodes",
+									removals: ["resolved", "systemNoteIconName"]
+								}
+							}
+						}
+					}
+				}
+			}
+		],
+		CreateMergeRequestNote: [
+			{
+				selector: (currentVersion: string) => semver.lt(currentVersion, "13.8.0"),
+				query: {
+					head: {
+						value: {
+							key: "discussionFragment",
+							removals: ["resolved", "resolvable", "resolvedAt", "resolvedBy"]
+						},
+						next: {
+							value: {
+								key: "notes"
+							},
+							next: {
+								value: {
+									key: "nodes",
+									removals: ["resolved", "systemNoteIconName"]
+								}
+							}
+						}
+					}
+				}
+			}
+		],
 		// for the GetPullRequest query, if the current version is << 13.8.0 run this...
 		GetPullRequest: [
 			{
@@ -128,6 +173,7 @@ export class GraphqlQueryBuilder {
 					}
 				}
 			},
+
 			{
 				// this is one of our internal GL versions
 				selector: (currentVersion: string) => semver.lt(currentVersion, "13.6.4"),
@@ -144,9 +190,11 @@ export class GraphqlQueryBuilder {
 								value: {
 									key: "mergeRequest",
 									removals: [
+										"author",
 										"approvedBy",
 										"commitCount",
 										"currentUserTodos",
+										"mergedAt",
 										"userDiscussionsCount"
 									]
 								},
@@ -160,8 +208,31 @@ export class GraphqlQueryBuilder {
 						}
 					}
 				}
+			},
+			{
+				selector: (currentVersion: string) => semver.lt(currentVersion, "13.8.0"),
+				query: {
+					head: {
+						value: {
+							key: "discussionFragment",
+							removals: ["resolved", "resolvable", "resolvedAt", "resolvedBy"]
+						},
+						next: {
+							value: {
+								key: "notes"
+							},
+							next: {
+								value: {
+									key: "nodes",
+									removals: ["resolved", "systemNoteIconName"]
+								}
+							}
+						}
+					}
+				}
 			}
 		],
+
 		GetPullRequest1: [
 			{
 				// this is one of our internal GL versions
@@ -189,6 +260,28 @@ export class GraphqlQueryBuilder {
 						}
 					}
 				}
+			},
+			{
+				// this is one of our internal GL versions
+				selector: (currentVersion: string) => semver.lt(currentVersion, "13.6.4"),
+				query: {
+					head: {
+						value: {
+							key: "GetPullRequest"
+						},
+						next: {
+							value: {
+								key: "project"
+							},
+							next: {
+								value: {
+									key: "mergeRequest",
+									removals: ["currentUserTodos"]
+								}
+							}
+						}
+					}
+				}
 			}
 		]
 	};
@@ -206,7 +299,11 @@ export class GraphqlQueryBuilder {
 	async build(
 		version: string,
 		document: DocumentNode,
-		queryKey: "GetPullRequest" | "GetPullRequest1"
+		queryKey:
+			| "GetPullRequest"
+			| "GetPullRequest1"
+			| "GetMergeRequestDiscussions"
+			| "CreateMergeRequestNote"
 	): Promise<string> {
 		try {
 			const versionedQuery = this.store[version];
@@ -238,14 +335,41 @@ export class GraphqlQueryBuilder {
 					Logger.debug(
 						`GraphqlQueryStore.build ${this.providerId} version=${version} found config`
 					);
-					const debugging = [];
+					const debugging: any[] = [];
 					const headData = config.query.head;
-					let head = config.query.head.next;
 
 					let lastSelectionSet: SelectionSetNode | undefined = (documentClone.definitions.find(
 						(_: any) => _.name && _.name.value === headData!.value.key
-					) as OperationDefinitionNode)?.selectionSet;
+					) as OperationDefinitionNode | FragmentDefinitionNode)?.selectionSet;
+					// this adds support for removals at the head node level
+					// used by fragments like discussionFragment
+					if (lastSelectionSet && headData.value.removals) {
+						for (const removalName of headData.value.removals) {
+							const exclusion = lastSelectionSet.selections?.find((_: SelectionNode) => {
+								// OMG Typescript, UGH
+								const node = _ as FieldNode;
+								return node.name.value === removalName;
+							}) as FieldNode;
+							if (exclusion) {
+								lastSelectionSet.selections = lastSelectionSet.selections?.filter(
+									(_: SelectionNode) => {
+										// OMG Typescript, UGH
+										const node = _ as FieldNode;
+										return node.name.value !== removalName;
+									}
+								);
+								Logger.log(
+									`GraphqlQueryStore.build ${
+										this.providerId
+									} version=${version} removing=${debugging
+										.map(_ => _.key)
+										.join(".")}.${removalName}`
+								);
+							}
+						}
+					}
 
+					let head = config.query.head.next;
 					while (head != null) {
 						debugging.push(head.value);
 						const currentSelectionSet:

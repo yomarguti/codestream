@@ -271,6 +271,7 @@ export const PullRequestConversationTab = (props: {
 				isReady: onOff
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const mergePullRequest = useCallback(
@@ -288,6 +289,7 @@ export const PullRequestConversationTab = (props: {
 					type: ChangeDataType.PullRequests
 				});
 			}
+			setIsLoadingMessage("");
 		},
 		[
 			pr.providerId,
@@ -464,6 +466,8 @@ export const PullRequestConversationTab = (props: {
 				userId: id
 			})
 		);
+
+		setIsLoadingMessage("");
 	};
 	const addReviewer = async id => {
 		setIsLoadingMessage("Requesting Review...");
@@ -473,6 +477,7 @@ export const PullRequestConversationTab = (props: {
 				userId: id
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableAssignees = async (e?) => {
@@ -532,6 +537,7 @@ export const PullRequestConversationTab = (props: {
 				onOff
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableLabels = async (e?) => {
@@ -578,6 +584,7 @@ export const PullRequestConversationTab = (props: {
 				onOff
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableProjects = async (e?) => {
@@ -617,12 +624,13 @@ export const PullRequestConversationTab = (props: {
 
 	const setProject = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding to Project..." : "Removing from Project...");
-		dispatch(
+		await dispatch(
 			api("toggleProjectOnPullRequest", {
 				projectId: id,
 				onOff
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableMilestones = async (e?) => {
@@ -667,12 +675,13 @@ export const PullRequestConversationTab = (props: {
 
 	const setMilestone = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Milestone..." : "Clearing Milestone...");
-		dispatch(
+		await dispatch(
 			api("toggleMilestoneOnPullRequest", {
 				milestoneId: id,
 				onOff
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	// const fetchAvailableIssues = async (e?) => {
@@ -848,10 +857,15 @@ export const PullRequestConversationTab = (props: {
 				{!pr.merged && pr.mergeable === "MERGEABLE" && pr.state !== "CLOSED" && (
 					<PRTimelineItem>
 						<PRAction>
-							Add more commits by pushing to the <PRBranch>{pr.headRefName}</PRBranch> branch on{" "}
-							<PRBranch>
-								{ghRepo.repoOwner}/{ghRepo.repoName}
-							</PRBranch>
+							Add more commits by pushing to the <PRBranch>{pr.headRefName}</PRBranch> branch{" "}
+							{pr.headRepositoryOwner?.login && pr.headRepository?.name && (
+								<>
+									on{" "}
+									<PRBranch>
+										{pr.headRepositoryOwner.login}/{pr.headRepository.name}
+									</PRBranch>
+								</>
+							)}
 							.
 						</PRAction>
 					</PRTimelineItem>

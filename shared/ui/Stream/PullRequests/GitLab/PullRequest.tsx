@@ -46,8 +46,12 @@ import { PullRequestFinishReview } from "../../PullRequestFinishReview";
 import Timestamp from "../../Timestamp";
 import {
 	api,
+	clearPullRequestCommits,
+	clearPullRequestFiles,
+	getPullRequestCommitsFromProvider,
 	getPullRequestConversations,
-	getPullRequestConversationsFromProvider
+	getPullRequestConversationsFromProvider,
+	getPullRequestFilesFromProvider
 } from "../../../store/providerPullRequests/actions";
 import { HostApi } from "../../../webview-api";
 import { clearCurrentPullRequest, setCurrentPullRequest } from "../../../store/context/actions";
@@ -316,6 +320,7 @@ export const PullRequest = () => {
 	const [savingTitle, setSavingTitle] = useState(false);
 	const [title, setTitle] = useState("");
 	const [finishReviewOpen, setFinishReviewOpen] = useState(false);
+	const [dynamicKey, setDynamicKey] = useState("");
 
 	const breakpoints = {
 		auto: "630px",
@@ -380,7 +385,7 @@ export const PullRequest = () => {
 
 			_didChangeDataNotification = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
 				if (e.type === ChangeDataType.Commits) {
-					fetch("Updating...");
+					reload("Updating...");
 				}
 			});
 			setDidMount(true);
@@ -493,6 +498,28 @@ export const PullRequest = () => {
 		_assignState(response);
 	};
 
+	const reload = async (message?: string) => {
+		console.log("MergeRequest is reloading");
+		fetch(message);
+
+		// just clear the files and commits data -- it will be fetched if necessary (since it has its own api call)
+		dispatch(
+			clearPullRequestFiles(
+				derivedState.currentPullRequestProviderId!,
+				derivedState.currentPullRequestId!
+			)
+		);
+		dispatch(
+			clearPullRequestCommits(
+				derivedState.currentPullRequestProviderId!,
+				derivedState.currentPullRequestId!
+			)
+		);
+		// we can force the child components to update
+		// by changing part of its key attribute
+		setDynamicKey(new Date().getTime().toString());
+	};
+
 	const __onDidRender = functions => {
 		insertText = functions.insertTextAtCursor;
 		insertNewline = functions.insertNewlineAtCursor;
@@ -557,6 +584,7 @@ export const PullRequest = () => {
 				onOff
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const edit = () => setIsEditing(true);
@@ -564,11 +592,13 @@ export const PullRequest = () => {
 	const reopen = async () => {
 		setIsLoadingMessage("Reopening...");
 		await dispatch(api("createPullRequestCommentAndReopen", { text: "" }));
+		setIsLoadingMessage("");
 	};
 
 	const close = async () => {
 		setIsLoadingMessage("Closing...");
 		await dispatch(api("createPullRequestCommentAndClose", { text: "" }));
+		setIsLoadingMessage("");
 	};
 
 	const { order, filter } = derivedState;
@@ -885,10 +915,10 @@ export const PullRequest = () => {
 									{order === "oldest" && bottomComment}
 								</>
 							)}
-							{activeTab === 2 && <PullRequestCommitsTab pr={pr} />}
+							{activeTab === 2 && <PullRequestCommitsTab key={"commits-" + dynamicKey} pr={pr} />}
 							{activeTab === 4 && (
 								<PullRequestFilesChangedTab
-									key="files-changed"
+									key={"files-changed-" + dynamicKey}
 									pr={pr as any}
 									setIsLoadingMessage={setIsLoadingMessage}
 								/>
@@ -910,7 +940,7 @@ export const PullRequest = () => {
 					rightOpen={rightOpen}
 					setRightOpen={setRightOpen}
 					setIsLoadingMessage={setIsLoadingMessage}
-					fetch={fetch}
+					onRefreshClick={reload}
 				/>
 			</PullRequestRoot>
 		</ThemeProvider>

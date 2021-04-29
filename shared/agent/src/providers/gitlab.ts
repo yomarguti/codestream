@@ -965,23 +965,30 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		let response;
 		try {
-			response = await (await this.client()).request<any>(query, variables);
+			response = await (await this.client()).rawRequest<any>(query, variables);
 		} catch (ex) {
-			Logger.warn("GitLab query caught:", ex);
 			const exType = this._isSuppressedException(ex);
 			if (exType !== undefined) {
+				Logger.warn("GitLab query caught:", ex);
 				if (exType !== ReportSuppressedMessages.NetworkError) {
 					this.trySetThirdPartyProviderInfo(ex, exType);
 				}
 				// this throws the error but won't log to sentry (for ordinary network errors that seem temporary)
 				throw new InternalError(exType, { error: ex });
 			} else {
+				Logger.warn("GitLab query error:", {
+					error: ex
+				});
+
+				if (ex.response?.data) {
+					return ex.response.data as T;
+				}
 				// this is an unexpected error, throw the exception normally
 				throw ex;
 			}
 		}
 
-		return response as T;
+		return response.data as T;
 	}
 
 	async mutate<T>(query: string, variables: any = undefined) {
@@ -1107,9 +1114,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			discussions = discussions.concat(response0.project.mergeRequest.discussions.nodes);
 			if (response0.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
 				let after = response0.project.mergeRequest.discussions.pageInfo.endCursor;
-				const paginatedDiscussionQuery = print(mergeRequestDiscussionQuery);
+				const discussionQuery = await this.graphqlQueryBuilder.build(
+					providerVersion!.version!,
+					mergeRequestDiscussionQuery,
+					"GetMergeRequestDiscussions"
+				);
+
 				while (true) {
-					const paginated = await this.query(paginatedDiscussionQuery, {
+					const paginated = await this.query(discussionQuery, {
 						...args,
 						after: after,
 						first: 100
@@ -1151,6 +1163,66 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			};
 
 			response.project.mergeRequest.discussions.nodes = discussions;
+
+			// merge request settings
+			const mergeRequest = await this.restGet<{
+				diverged_commits_count: number;
+				changes_count?: string;
+				merged_at: string | undefined;
+				author: {
+					id: number;
+					name: string;
+					username: string;
+					avatar_url: string;
+				};
+				assignees?: {
+					name: string;
+					username: string;
+					id: number;
+					avatar_url: string;
+				}[];
+			}>(
+				`/projects/${encodeURIComponent(
+					projectFullPath
+				)}/merge_requests/${iid}?include_diverged_commits_count=true`
+			);
+			response.project.mergeRequest.divergedCommitsCount =
+				mergeRequest.body.diverged_commits_count || 0;
+
+			if (response.project?.mergeRequest?.headPipeline) {
+				response.project.mergeRequest.headPipeline.gid =
+					response.project.mergeRequest.headPipeline.id;
+				response.project.mergeRequest.headPipeline.id = response.project.mergeRequest.headPipeline.id.replace(
+					"gid://gitlab/Ci::Pipeline/",
+					""
+				);
+				response.project.mergeRequest.headPipeline.webUrl = `${this.baseWebUrl}/${response.project.mergeRequest.project.fullPath}/-/pipelines/${response.project.mergeRequest.headPipeline.id}`;
+			}
+			if (!response.project.mergeRequest.author && mergeRequest.body.author) {
+				response.project.mergeRequest.author = {
+					avatarUrl: mergeRequest.body.author.avatar_url,
+					name: mergeRequest.body.author.name,
+					login: mergeRequest.body.author.username,
+					id: `gid://gitlab/User/${mergeRequest.body.author.id}`
+				};
+			}
+			if (!response.project.mergeRequest.mergedAt && mergeRequest.body.merged_at) {
+				response.project.mergeRequest.mergedAt = mergeRequest.body.merged_at;
+			}
+
+			// assignees from graphql don't exist on <= 12.10.x
+			// get it from REsT api
+			response.project.mergeRequest.assignees = {
+				nodes:
+					mergeRequest.body?.assignees?.map(_ => {
+						return {
+							avatarUrl: _.avatar_url,
+							name: _.name,
+							login: _.username,
+							id: `gid://gitlab/User/${_.id}`
+						};
+					}) || []
+			};
 
 			// massage the authors to get a fully qualified url
 			this.toAuthorAbsolutePath(response.project.mergeRequest.author);
@@ -1203,28 +1275,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				Logger.warn("approvals", { error: ex });
 				this._ignoredFeatures.set("approvals", true);
 				Logger.log("Ignoring 'approvals'");
-			}
-
-			// merge request settings
-			const mergeRequest = await this.restGet<{
-				diverged_commits_count: number;
-				changes_count?: string;
-			}>(
-				`/projects/${encodeURIComponent(
-					projectFullPath
-				)}/merge_requests/${iid}?include_diverged_commits_count=true`
-			);
-			response.project.mergeRequest.divergedCommitsCount =
-				mergeRequest.body.diverged_commits_count || 0;
-
-			if (response.project?.mergeRequest?.headPipeline) {
-				response.project.mergeRequest.headPipeline.gid =
-					response.project.mergeRequest.headPipeline.id;
-				response.project.mergeRequest.headPipeline.id = response.project.mergeRequest.headPipeline.id.replace(
-					"gid://gitlab/Ci::Pipeline/",
-					""
-				);
-				response.project.mergeRequest.headPipeline.webUrl = `${this.baseWebUrl}/${response.project.mergeRequest.project.fullPath}/-/pipelines/${response.project.mergeRequest.headPipeline.id}`;
 			}
 
 			const base_id = this.fromMergeRequestGid(response.project.mergeRequest.id);
@@ -1288,7 +1338,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.headSha,
 				headRefName: response.project.mergeRequest.sourceBranch,
 				repository: {
-					name: response.project.mergeRequest.project.name,
+					name: response.project.mergeRequest.project.path,
 					nameWithOwner: response.project.mergeRequest.project.fullPath,
 					url: response.project.mergeRequest.project.webUrl
 				},
@@ -1315,9 +1365,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				currentUser
 			);
 
-			response.project.mergeRequest.viewerDidAuthor =
-				response.project.mergeRequest.author.login == response.currentUser.login;
-
+			if (response.project.mergeRequest.author) {
+				response.project.mergeRequest.viewerDidAuthor =
+					response.project.mergeRequest.author.login == response.currentUser.login;
+			}
 			// get all timeline events
 			(
 				await Promise.all([
@@ -1336,9 +1387,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			);
 
 			response.project.mergeRequest.supports = this.graphqlQueryBuilder.getOrCreateSupportMatrix(
-				"GetPullRequest",
 				providerVersion
 			);
+
+			if (response.project.mergeRequest.description) {
+				response.project.mergeRequest.description = this.enhanceDescription(
+					response.project.mergeRequest.description,
+					projectFullPath
+				);
+			}
 
 			this._pullRequestCache.set(request.pullRequestId, response);
 		} catch (ex) {
@@ -1453,10 +1510,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		text: string;
 	}): Promise<Directives> {
 		if (!request.parentId) throw new Error("ParentId missing");
+		const providerVersion = await this.getVersion();
 
 		const { id } = this.parseId(request.pullRequestId);
+		let noteableId = "NoteableID";
+		let discussionId = "DiscussionID";
+		if (semver.lt(providerVersion.version, "13.6.4")) {
+			noteableId = discussionId = "ID";
+		}
 		const response = await this.query<any>(
-			`mutation createNote($noteableId: NoteableID!, $discussionId: DiscussionID!, $body: String!) {
+			`mutation createNote($noteableId: ${noteableId}!, $discussionId: ${discussionId}!, $body: String!) {
 			createNote(input: {noteableId: $noteableId, discussionId: $discussionId, body: $body}) {
 			  clientMutationId
 			  note {
@@ -1474,8 +1537,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					createdAt
 				  }
 				  id
-				  resolvable
-				  resolved
+				  resolvable				   
 				  updatedAt
 				  userPermissions {
 					adminNote
@@ -1509,7 +1571,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					type: "updateReviewCommentsCount",
 					data: 1
 				},
-				{ type: "addReply", data: response.createNote.note }
+				// "resolved" doesn't exist on GL 12.10
+				{ type: "addReply", data: { ...response.createNote.note, resolved: false } }
 			]
 		});
 	}
@@ -2005,13 +2068,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							updatedAt: Dates.toUtcIsoNow(),
 							title: body.title,
 							workInProgress: body.work_in_progress,
-							description: body.description,
+							description: this.enhanceDescription(request.description, projectFullPath),
 							targetBranch: body.target_branch,
 							assignees: {
 								nodes: body.assignees.map((assignee: any) => {
 									return {
 										...assignee,
-										id: `gid://gitlab/User/${assignee.id}}`,
+										id: `gid://gitlab/User/${assignee.id}`,
 										login: assignee.username,
 										avatarUrl: this.avatarUrl(assignee.avatar_url)
 									};
@@ -2131,7 +2194,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		noteableId = id;
 		request.noteableId = this.toMergeRequestGid(noteableId);
 
-		const response = (await this.mutate(print(mergeRequestNoteMutation), {
+		const providerVersion = await this.getVersion();
+		const queryText = await this.graphqlQueryBuilder.build(
+			providerVersion!.version!,
+			mergeRequestNoteMutation,
+			"CreateMergeRequestNote"
+		);
+
+		const response = (await this.mutate(queryText, {
 			noteableId: request.noteableId,
 			body: request.text,
 			iid: request.iid!.toString()
@@ -2238,7 +2308,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}): Promise<Directives> {
 		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
 
-		const comment = await this.gitLabReviewStore.updateComment(new GitLabId(projectFullPath, iid), request.id, request.body);
+		const comment = await this.gitLabReviewStore.updateComment(
+			new GitLabId(projectFullPath, iid),
+			request.id,
+			request.body
+		);
 
 		if (comment) {
 			this._pullRequestCache.delete(id);
@@ -2264,7 +2338,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			};
 		}
 
-		return {directives: []};
+		return { directives: [] };
 	}
 
 	@log()
@@ -2278,8 +2352,22 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const noteId = request.id;
 		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
 
+		let directives: Directive[] = [];
 		if (request.isPending) {
-			await this.gitLabReviewStore.deleteComment(new GitLabId(projectFullPath, iid), request.id);
+			const review = await this.gitLabReviewStore.deleteComment(
+				new GitLabId(projectFullPath, iid),
+				request.id
+			);
+			if (review?.comments?.length === 0) {
+				directives.push({
+					type: "removePendingReview",
+					data: null
+				});
+			}
+			directives.push({
+				type: "updatePendingReviewCommentsCount",
+				data: -1
+			});
 		} else {
 			const query = `
 				mutation DestroyNote($id:ID!) {
@@ -2296,34 +2384,35 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			});
 		}
 
-		const directives: Directives = {
-			directives: [
-				{
-					type: "updatePullRequest",
-					data: {
-						updatedAt: Dates.toUtcIsoNow()
-					}
-				},
-				{
-					type: "removeNode",
-					data: {
-						id: request.id
-					}
-				},
-				{
-					type: "updateReviewCommentsCount",
-					data: -1
+		directives = directives.concat([
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: Dates.toUtcIsoNow()
 				}
-			]
+			},
+			{
+				type: "removeNode",
+				data: {
+					id: request.id
+				}
+			},
+			{
+				type: "updateReviewCommentsCount",
+				data: -1
+			}
+		]);
+		const directivesResponse: Directives = {
+			directives: directives
 		};
 
-		this.updateCache(request.pullRequestId, directives);
+		this.updateCache(request.pullRequestId, directivesResponse);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: id,
 			commentId: noteId
 		});
 
-		return directives;
+		return directivesResponse;
 	}
 
 	@log()
@@ -2458,7 +2547,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		const projectFullPathEncoded = encodeURIComponent(projectFullPath);
-		const url = `/projects/${projectFullPathEncoded}/merge_requests/${iid}/commits`;
+		const url = `/projects/${projectFullPathEncoded}/merge_requests/${iid}/commits?per_page=100`;
 		const query = await this.restGet<
 			{
 				author_email: string;
@@ -2608,8 +2697,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
+			const providerVersion = await this.getVersion();
+			// newwer mutations use a custom LabelID type
 			const response = await this.mutate<any>(
-				`mutation MergeRequestSetLabels($projectPath: ID!, $iid: String!, $labelIds: [LabelID!]!) {
+				`mutation MergeRequestSetLabels($projectPath: ID!, $iid: String!, $labelIds: [${
+					semver.lt(providerVersion.version, "13.6.4") ? "ID" : "LabelID"
+				}!]!) {
 					mergeRequestSetLabels(input: {projectPath: $projectPath, iid: $iid, labelIds: $labelIds}) {
 					  mergeRequest {
 						labels(last: 100) {
@@ -2621,8 +2714,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						}
 					  }
 					}
-				  }
-				  `,
+				  }`,
 				{
 					projectPath: projectFullPath,
 					iid: iid,
@@ -3167,7 +3259,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	@log()
-	async updateIssueComment(request: { id: string; body: string; pullRequestId: string; }): Promise<Directives> {
+	async updateIssueComment(request: {
+		id: string;
+		body: string;
+		pullRequestId: string;
+	}): Promise<Directives> {
 		// detect if this review comment
 		if (request.id.indexOf("gitlab") === -1) {
 			return this.updateReviewComment(request);
@@ -3236,11 +3332,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	private async getLastDiscussions(projectFullPath: string, iid: string, last: number = 3) {
-		const lastDiscussions = ((await this.query(print(mergeRequestDiscussionQuery), {
+		const providerVersion = await this.getVersion();
+		const discussionQuery = await this.graphqlQueryBuilder.build(
+			providerVersion!.version!,
+			mergeRequestDiscussionQuery,
+			"GetMergeRequestDiscussions"
+		);
+
+		const lastDiscussions = ((await this.query(discussionQuery, {
 			fullPath: projectFullPath,
 			iid: iid.toString(),
 			last: last
 		})) as GitLabMergeRequestWrapper).project?.mergeRequest.discussions.nodes;
+		this.ensureAvatarAbsolutePathRecurse(lastDiscussions);
 		return lastDiscussions;
 	}
 
@@ -3248,45 +3352,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		projectFullPath: string,
 		iid: string
 	): Promise<DiscussionNode[]> {
-		return this._paginateRestResponse(
-			`/projects/${encodeURIComponent(
-				projectFullPath
-			)}/merge_requests/${iid}/resource_milestone_events`,
-			data => {
-				return data.map(_ => {
-					return {
-						id: _.id,
-						createdAt: _.created_at,
-						notes: {
-							nodes: [
-								{
-									createdAt: _.created_at,
-									system: true,
-									systemNoteIconName: `milestone-${_.action}`,
-									author: this.fromRestUser(_.user),
-									body: `${_.action === "add" ? "added" : "removed"}`,
-									milestone: {
-										title: _.milestone.title,
-										url: _.milestone.web_url
-									}
-								}
-							]
-						}
-					};
-				});
+		try {
+			// this endpoint doesn't exist on 12.10
+			const providerVersion = await this.getVersion();
+			if (!providerVersion.isDefault && semver.lt(providerVersion.version, "13.6.4")) {
+				return [];
 			}
-		);
-	}
 
-	private async getLabelEvents(projectFullPath: string, iid: string): Promise<DiscussionNode[]> {
-		return this._paginateRestResponse(
-			`/projects/${encodeURIComponent(
-				projectFullPath
-			)}/merge_requests/${iid}/resource_label_events`,
-			data => {
-				return data
-					.filter(_ => _.label)
-					.map(_ => {
+			return this._paginateRestResponse(
+				`/projects/${encodeURIComponent(
+					projectFullPath
+				)}/merge_requests/${iid}/resource_milestone_events`,
+				data => {
+					return data.map(_ => {
 						return {
 							id: _.id,
 							createdAt: _.created_at,
@@ -3295,48 +3373,126 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 									{
 										createdAt: _.created_at,
 										system: true,
-										systemNoteIconName: `label-${_.action}`,
+										systemNoteIconName: `milestone-${_.action}`,
 										author: this.fromRestUser(_.user),
 										body: `${_.action === "add" ? "added" : "removed"}`,
-										label: {
-											description: _.label.description,
-											color: _.label.color,
-											title: _.label.name
+										milestone: {
+											title: _.milestone.title,
+											url: _.milestone.web_url
 										}
 									}
 								]
 							}
 						};
 					});
+				}
+			).catch(_ => {
+				return [];
+			});
+		} catch (ex) {
+			return [];
+		}
+	}
+
+	private async getLabelEvents(projectFullPath: string, iid: string): Promise<DiscussionNode[]> {
+		try {
+			// this endpoint doesn't exist on 12.10
+			const providerVersion = await this.getVersion();
+			if (!providerVersion.isDefault && semver.lt(providerVersion.version, "13.6.4")) {
+				return [];
 			}
-		);
+			return this._paginateRestResponse(
+				`/projects/${encodeURIComponent(
+					projectFullPath
+				)}/merge_requests/${iid}/resource_label_events`,
+				data => {
+					return data
+						.filter(_ => _.label)
+						.map(_ => {
+							return {
+								id: _.id,
+								createdAt: _.created_at,
+								notes: {
+									nodes: [
+										{
+											createdAt: _.created_at,
+											system: true,
+											systemNoteIconName: `label-${_.action}`,
+											author: this.fromRestUser(_.user),
+											body: `${_.action === "add" ? "added" : "removed"}`,
+											label: {
+												description: _.label.description,
+												color: _.label.color,
+												title: _.label.name
+											}
+										}
+									]
+								}
+							};
+						});
+				}
+			).catch(_ => {
+				return [];
+			});
+		} catch (ex) {
+			return [];
+		}
 	}
 
 	private async getStateEvents(projectFullPath: string, iid: string): Promise<DiscussionNode[]> {
-		return this._paginateRestResponse(
-			`/projects/${encodeURIComponent(
-				projectFullPath
-			)}/merge_requests/${iid}/resource_state_events`,
-			data => {
-				return data.map(_ => {
-					return {
-						id: _.id,
-						createdAt: _.created_at,
-						notes: {
-							nodes: [
-								{
-									createdAt: _.created_at,
-									system: true,
-									systemNoteIconName: `merge-request-${_.state}`,
-									author: this.fromRestUser(_.user),
-									body: _.state
-								}
-							]
-						}
-					};
-				});
+		try {
+			// this endpoint doesn't exist on 12.10
+			const providerVersion = await this.getVersion();
+			if (!providerVersion.isDefault && semver.lt(providerVersion.version, "13.6.4")) {
+				return [];
 			}
-		);
+			return this._paginateRestResponse(
+				`/projects/${encodeURIComponent(
+					projectFullPath
+				)}/merge_requests/${iid}/resource_state_events`,
+				data => {
+					return data.map(_ => {
+						return {
+							id: _.id,
+							createdAt: _.created_at,
+							notes: {
+								nodes: [
+									{
+										createdAt: _.created_at,
+										system: true,
+										systemNoteIconName: `merge-request-${_.state}`,
+										author: this.fromRestUser(_.user),
+										body: _.state
+									}
+								]
+							}
+						};
+					});
+				}
+			).catch(_ => {
+				return [];
+			});
+		} catch (ex) {
+			return [];
+		}
+	}
+
+	/**
+	 * Adds fully-qualified URLs for a merge request description's markdown.
+	 * Only required when sending to the webview
+	 *
+	 * @private
+	 * @param {string} description
+	 * @param {string} projectFullPath
+	 * @return {*}
+	 * @memberof GitLabProvider
+	 */
+	private enhanceDescription(description: string, projectFullPath: string) {
+		if (!description || !projectFullPath) return description;
+
+		return description.replace(/\[.+?\]\((\/uploads\/.+?)\)/g, (match, group1) => {
+			return match.replace(group1, `${this.baseWebUrl}/${projectFullPath}${group1}`);
+		});
 	}
 
 	private avatarUrl(url: string) {
@@ -3352,7 +3508,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	private toKeyValuePair(q: string, currentUser: GitLabCurrentUser) {
-		const kvp = q.split(":");
+		const kvp = q.split(/:|=/);
 		let value = kvp[1];
 		if (value === "@me" && currentUser) {
 			value = currentUser.login;
@@ -3376,14 +3532,20 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return author;
 	}
 
-	private ensureAvatarAbsolutePathRecurse(obj: any) {
+	private ensureAvatarAbsolutePathRecurse(obj: any | any[]) {
 		if (!obj) return;
-		for (const k in obj) {
-			if (typeof obj[k] === "object") {
-				this.ensureAvatarAbsolutePathRecurse(obj[k]);
-			} else if (k === "avatarUrl") {
-				if (obj?.avatarUrl?.indexOf("/") === 0) {
-					obj.avatarUrl = `${this.baseWebUrl}${obj.avatarUrl}`;
+		if (Array.isArray(obj)) {
+			obj.forEach(o => {
+				this.ensureAvatarAbsolutePathRecurse(o);
+			});
+		} else {
+			for (const k in obj) {
+				if (typeof obj[k] === "object") {
+					this.ensureAvatarAbsolutePathRecurse(obj[k]);
+				} else if (k === "avatarUrl") {
+					if (obj?.avatarUrl?.indexOf("/") === 0) {
+						obj.avatarUrl = `${this.baseWebUrl}${obj.avatarUrl}`;
+					}
 				}
 			}
 		}
@@ -3597,6 +3759,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						(pr as any)[key] = directive.data[key];
 					}
 				}
+			} else if (directive.type === "updatePendingReviewCommentsCount") {
+				// ensure no negatives
+				if (pr.pendingReview && pr.pendingReview.comments) {
+					pr.pendingReview.comments.totalCount = Math.max(
+						(pr.pendingReview.comments.totalCount || 0) + directive.data,
+						0
+					);
+				}
 			} else if (directive.type === "updateReviewCommentsCount") {
 				// ensure no negatives
 				pr.userDiscussionsCount = Math.max((pr.userDiscussionsCount || 0) + directive.data, 0);
@@ -3763,12 +3933,13 @@ class GitLabReviewStore {
 					contents: JSON.stringify(review)
 				});
 			} else {
-				// we aren't left with any comments.. just delete the file
+				// if we aren't left with any comments... just delete the review/file
 				await this.deleteReview(id);
 			}
+			return review;
 		}
 
-		return true;
+		return undefined;
 	}
 
 	mapToDiscussionNode(_: any, user: GitLabCurrentUser): DiscussionNode {
@@ -3783,6 +3954,13 @@ class GitLabReviewStore {
 				nodes: [
 					{
 						_pending: true,
+						userPermissions: {
+							adminNote: true,
+							readNote: true,
+							resolveNote: true,
+							awardEmoji: true,
+							createNote: true
+						},
 						id: id,
 						author: {
 							name: user.name,

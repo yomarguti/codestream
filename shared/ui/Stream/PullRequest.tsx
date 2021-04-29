@@ -365,6 +365,8 @@ export const PullRequest = () => {
 		setSavingTitle(true);
 		await dispatch(api("updatePullRequestTitle", { title }));
 		setSavingTitle(false);
+		setEditingTitle(false);
+		setIsLoadingMessage("");
 	};
 
 	const getOpenRepos = async () => {
@@ -564,7 +566,7 @@ export const PullRequest = () => {
 			);
 		}
 		return false;
-	}, [pr]);
+	}, [pr, pr?.updatedAt]);
 
 	const breakpoints = {
 		auto: "630px",

@@ -193,6 +193,7 @@ export function initializeColorPalette() {
 
 		color = computedStyle.getPropertyValue("--vscode-sideBar-background").trim();
 		bodyStyle.setProperty("--sidebar-background", color);
+		bodyStyle.setProperty("--app-tab-backgound", color);
 		color = computedStyle.getPropertyValue("--vscode-sideBar-foreground").trim();
 		bodyStyle.setProperty("--sidebar-foreground", color);
 		color = computedStyle.getPropertyValue("--vscode-sideBar-border").trim();

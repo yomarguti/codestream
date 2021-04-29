@@ -1,6 +1,9 @@
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import { CodeStreamState } from "@codestream/webview/store";
-import { getPullRequestCommits } from "@codestream/webview/store/providerPullRequests/actions";
+import {
+	getPullRequestCommits,
+	getPullRequestCommitsFromProvider
+} from "@codestream/webview/store/providerPullRequests/actions";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -153,19 +156,22 @@ export const PullRequestCommitsTab = props => {
 
 	useDidMount(() => {
 		setIsLoading(true);
+		let disposable;
 		(async () => {
 			getData();
+
+			disposable = HostApi.instance.on(DidChangeDataNotificationType, async (e: any) => {
+				if (e.type === ChangeDataType.Commits) {
+					setIsLoading(true);
+					const data = await dispatch(
+						getPullRequestCommitsFromProvider(pr.providerId, derivedState.currentPullRequestId!)
+					);
+					_mapData(data);
+				}
+			});
 		})();
-
-		const disposable = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
-			if (e.type === ChangeDataType.Commits) {
-				setIsLoading(true);
-				getData({ force: true });
-			}
-		});
-
 		return () => {
-			disposable.dispose();
+			disposable?.dispose();
 		};
 	});
 

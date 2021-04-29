@@ -36,7 +36,7 @@ const Right = styled.div`
 	top: 0;
 	right: 0;
 	background-color: rgba(127, 127, 127, 0.1);
-	background-color: var(--sidebar-background);
+	background-color: var(--app-tab-backgound);
 	z-index: 30;
 	transition: width 0.2s;
 	&.expanded {
@@ -183,7 +183,7 @@ export const RightActionBar = (props: {
 	rightOpen: any;
 	setRightOpen: any;
 	setIsLoadingMessage: any;
-	fetch: Function;
+	onRefreshClick: Function;
 }) => {
 	const { pr, rightOpen, setRightOpen, setIsLoadingMessage } = props;
 	const dispatch = useDispatch();
@@ -297,7 +297,8 @@ export const RightActionBar = (props: {
 
 	const setAssignees = async (ids: number[]) => {
 		setIsLoadingMessage("Setting Assignee...");
-		dispatch(api("setAssigneeOnPullRequest", { ids }));
+		await dispatch(api("setAssigneeOnPullRequest", { ids }));
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableReviewers = async (e?) => {
@@ -366,7 +367,8 @@ export const RightActionBar = (props: {
 
 	const setReviewers = async (ids: number[]) => {
 		setIsLoadingMessage("Updating Reviewer...");
-		dispatch(api("setReviewersOnPullRequest", { ids }));
+		await dispatch(api("setReviewersOnPullRequest", { ids }));
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableMilestones = async (e?) => {
@@ -414,11 +416,12 @@ export const RightActionBar = (props: {
 
 	const setMilestone = async (id: string) => {
 		setIsLoadingMessage(id ? "Setting Milestone..." : "Clearing Milestone...");
-		dispatch(
+		await dispatch(
 			api("toggleMilestoneOnPullRequest", {
 				milestoneId: id
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableLabels = async (e?) => {
@@ -476,6 +479,7 @@ export const RightActionBar = (props: {
 					: pr.labels.nodes.map(_ => _.id).filter(_ => _ !== id)
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
@@ -484,6 +488,7 @@ export const RightActionBar = (props: {
 		setIsLoadingNotifications(true);
 		await dispatch(api("updatePullRequestSubscription", { onOff }));
 		setIsLoadingNotifications(false);
+		setIsLoadingMessage("");
 	};
 
 	const openAssignees = () => setRightOpen(true);
@@ -505,9 +510,10 @@ export const RightActionBar = (props: {
 					{
 						label: "Unlock",
 						className: "delete",
-						action: () => {
+						action: async () => {
 							setIsLoadingMessage("Unlocking...");
-							dispatch(api("unlockPullRequest", {}));
+							await dispatch(api("unlockPullRequest", {}));
+							setIsLoadingMessage("");
 						}
 					}
 				]
@@ -524,9 +530,10 @@ export const RightActionBar = (props: {
 					{
 						label: "Lock",
 						className: "delete",
-						action: () => {
+						action: async () => {
 							setIsLoadingMessage("Locking...");
-							dispatch(api("lockPullRequest", {}));
+							await dispatch(api("lockPullRequest", {}));
+							setIsLoadingMessage("");
 						}
 					}
 				]
@@ -545,6 +552,7 @@ export const RightActionBar = (props: {
 		if (hasToDo) await dispatch(api("markToDoDone", { id: hasToDo.id }));
 		else await dispatch(api("createToDo", {}));
 		setIsLoadingToDo(false);
+		setIsLoadingMessage("");
 	};
 
 	const reference = pr.url;
@@ -570,7 +578,7 @@ export const RightActionBar = (props: {
 	const [isLoading, setIsLoading] = useState(false);
 	const refresh = async () => {
 		setIsLoading(true);
-		await props.fetch("Refreshing...");
+		await props.onRefreshClick("Refreshing...");
 		setIsLoading(false);
 	};
 

@@ -22,6 +22,11 @@ import java.awt.event.KeyEvent
 abstract class NewCodemark(val type: CodemarkType) : DumbAwareAction(), IntentionAction, LowPriorityAction, Iconable {
     private fun execute(project: Project, source: String) {
         project.editorService?.activeEditor?.run {
+            if (!this.selectionModel.hasSelection()) {
+                val startOffset = this.document.getLineStartOffset(selectionOrCurrentLine.start.line)
+                val endOffset = this.document.getLineEndOffset(selectionOrCurrentLine.start.line)
+                this.selectionModel.setSelection(startOffset, endOffset)
+            }
             project.codeStream?.show {
                 project.webViewService?.postNotification(
                     CodemarkNotifications.New(
