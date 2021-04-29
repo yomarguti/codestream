@@ -12,6 +12,7 @@
 
 ### Fixed
 
+- Addresses [#525](https://github.com/TeamCodeStream/CodeStream/issues/525) &mdash; Error creating a codemark in a file with a lot of uncommitted changes
 - Addresses [#502](https://github.com/TeamCodeStream/CodeStream/issues/502) &mdash; Can't checkout to the branch in a merge request
 - Fixes an issue where clicking on Diff Hunks view in a pull request would result in an error
 - Addresses [#454](https://github.com/TeamCodeStream/CodeStream/issues/454) &mdash; Default headshot display to initials when gravatar/headshot can't be loaded for on-prem users
@@ -27,6 +28,7 @@
 - Fixes an issue deleting a pending review comment in a merge request
 - Fixes an issue with broken headshot display when adding a comment in a merge request
 - Fixes an issue where the "requested a review" banner in a pull request doesn't go away on submission of a review
+- Fixes an issue where WSL users can't select repo when creating a feedback reqest
 
 ## [11.0.4] - 2021-4-22
 
