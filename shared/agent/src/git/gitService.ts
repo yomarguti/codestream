@@ -1278,7 +1278,7 @@ export class GitService implements IGitService, Disposable {
 		if (fs.existsSync(fileOrFolderPath) && fs.lstatSync(fileOrFolderPath).isDirectory()) {
 			const normalizedFsPath = Strings.normalizePath(fileOrFolderPath);
 			const allRepos = await this.getRepositories();
-			repo = Array.from(allRepos).find(r => r.path === normalizedFsPath);
+			repo = Array.from(allRepos).find(r => r.path === normalizedFsPath || r.path === fileOrFolderPath);
 		} else {
 			// do NOT allow folders to get into this path, any folder not already tracked
 			// will traverse _up_ looking for additional git repos.

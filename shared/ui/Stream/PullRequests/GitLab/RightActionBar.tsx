@@ -183,7 +183,7 @@ export const RightActionBar = (props: {
 	rightOpen: any;
 	setRightOpen: any;
 	setIsLoadingMessage: any;
-	fetch: Function;
+	onRefreshClick: Function;
 }) => {
 	const { pr, rightOpen, setRightOpen, setIsLoadingMessage } = props;
 	const dispatch = useDispatch();
@@ -578,7 +578,7 @@ export const RightActionBar = (props: {
 	const [isLoading, setIsLoading] = useState(false);
 	const refresh = async () => {
 		setIsLoading(true);
-		await props.fetch("Refreshing...");
+		await props.onRefreshClick("Refreshing...");
 		setIsLoading(false);
 	};
 

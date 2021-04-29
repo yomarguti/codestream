@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Gravatar from "react-gravatar";
 import Icon from "@codestream/webview/Stream/Icon";
@@ -105,11 +105,16 @@ export const ThumbsUp = styled.div`
 `;
 
 export const Headshot = styled((props: HeadshotProps) => {
+	const [imageError, setImageError] = useState(false);
 	const person = props.person;
 	if (!person) return null;
 
 	if (person == undefined || person.username === "CodeStream")
 		return <CodeStreamHeadshot {...props} />;
+
+	useEffect(() => {
+		setImageError(false);
+	}, [person.avatar]);
 
 	let initials = (person.email && person.email.charAt(0)) || "";
 	if (person.fullName) {
@@ -125,7 +130,7 @@ export const Headshot = styled((props: HeadshotProps) => {
 	const className =
 		(props.className || "") +
 		(props.addThumbsUp && !props.hardRightBorder ? " make-room-for-thumbs-up" : "");
-	if (person.avatar) {
+	if (person.avatar && !imageError) {
 		const uri = size > 48 ? person.avatar.image : person.avatar.image48 || person.avatar.image;
 
 		if (uri)
@@ -137,7 +142,7 @@ export const Headshot = styled((props: HeadshotProps) => {
 					className={className}
 					onClick={props.onClick}
 				>
-					<Image size={size} src={uri} />
+					<Image size={size} src={uri} onError={() => setImageError(true)} />
 					{props.addThumbsUp && (
 						<ThumbsUp>
 							<Icon name="thumbsup" />

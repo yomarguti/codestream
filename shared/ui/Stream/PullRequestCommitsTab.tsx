@@ -156,22 +156,22 @@ export const PullRequestCommitsTab = props => {
 
 	useDidMount(() => {
 		setIsLoading(true);
+		let disposable;
 		(async () => {
 			getData();
+
+			disposable = HostApi.instance.on(DidChangeDataNotificationType, async (e: any) => {
+				if (e.type === ChangeDataType.Commits) {
+					setIsLoading(true);
+					const data = await dispatch(
+						getPullRequestCommitsFromProvider(pr.providerId, derivedState.currentPullRequestId!)
+					);
+					_mapData(data);
+				}
+			});
 		})();
-
-		const disposable = HostApi.instance.on(DidChangeDataNotificationType, async (e: any) => {
-			if (e.type === ChangeDataType.Commits) {
-				setIsLoading(true);
-				const data = await dispatch(
-					getPullRequestCommitsFromProvider(pr.providerId, derivedState.currentPullRequestId!)
-				);
-				_mapData(data);
-			}
-		});
-
 		return () => {
-			disposable.dispose();
+			disposable?.dispose();
 		};
 	});
 

@@ -87,6 +87,7 @@ export class ConfigureEnterprisePanel extends Component {
 		const placeholder = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].urlPlaceholder : "";
 		const getUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].getUrl : "";
 		const helpUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].helpUrl : "";
+		const versionMinimum = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].versionMinimum : "";
 		return (
 			<div className="panel configure-provider-panel">
 				<form className="standard-form vscroll" onSubmit={this.onSubmit}>
@@ -100,6 +101,16 @@ export class ConfigureEnterprisePanel extends Component {
 								Not a {providerName} customer yet? <a href={getUrl}>Get {providerName}</a>
 							</p>
 						)}
+						{versionMinimum && (
+							<p style={{ textAlign: "center" }} className="explainer">
+								Requires {providerName} v12.10 or later.{" "}
+								<a href="https://docs.codestream.com/userguide/faq/glsm-version/">
+									Check your version
+								</a>
+								.
+							</p>
+						)}
+						<br />
 						{this.renderError()}
 						<div id="controls">
 							<div id="configure-enterprise-controls" className="control-group">
