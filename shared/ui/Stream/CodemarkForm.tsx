@@ -2013,7 +2013,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (this.props.multiLocation || !editingCodemark) {
 			return (
 				<div className="full-height-codemark-form">
-					<CancelButton onClick={this.cancelCompose} />
+					<CancelButton onClick={this.cancelCompose} incrementKeystrokeLevel={true} />
 					<PanelHeader
 						title={
 							this.props.currentReviewId
@@ -2395,6 +2395,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								onClick={this.cancelCodemarkCompose}
 								title={this.state.copied ? "Close" : "Cancel"}
 								mode="button"
+								incrementKeystrokeLevel={true}
 							/>
 							{commentType === "link" && this.state.linkURI && !this.state.copied && (
 								<Tooltip title={"Copy Link and Code Block (Markdown)"} placement="bottom" delay={1}>

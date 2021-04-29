@@ -19,31 +19,41 @@ export default function CancelButton({
 	title = "",
 	mode = "icon", // or "button"
 	tooltip = undefined,
+	incrementKeystrokeLevel = false,
 	...extras
 }) {
 	const { dispatch, ...extraProps } = extras; // remove non-html attributes
+	const disposables = [];
 
 	useDidMount(() => {
-		let disposable;
 		if (onClick && typeof onClick === "function") {
-			disposable = KeystrokeDispatcher.onKeyDown(
-				"Escape",
-				event => {
-					// don't allow cancel if the MessageInput div is the target, unless it's empty
-					const d = document.getElementById("input-div");
-					if (event.target === d && d.innerHTML != "") {
-						return;
-					}
+			if (incrementKeystrokeLevel) {
+				disposables.push(
+					KeystrokeDispatcher.withLevel()
+				)
+			}
+			disposables.push(
+				KeystrokeDispatcher.onKeyDown(
+					"Escape",
+					event => {
+						// don't allow cancel if the MessageInput div is the target, unless it's empty
+						const d = document.getElementById("input-div");
+						if (event.target === d && d.innerHTML != "") {
+							return;
+						}
 
-					onClick(event);
-				},
-				{ source: "CancelButton.js", level: -1 }
-			);
+						onClick(event);
+					},
+					{ source: "CancelButton.js", level: -1 }
+				)
+			)
 		} else {
 			logWarning("CancelButton missing onClick handler");
 		}
 
-		return () => disposable && disposable.dispose();
+		return () => {
+			disposables && disposables.forEach(_ => _.dispose());
+		};
 	});
 
 	let tip = tooltip || (
