@@ -1,1 +1,15 @@
-export default {};
+export default {
+		and: "y",
+	learnMore: "Leer más.",
+	"signUp.username.label": "Nombre de usuario",
+	"signUp.username.help": "[A-Za-z0-9-_.] son válidos",
+	"signUp.password.label": "Contraseña",
+	"signUp.email.label": "Correo electrónico",
+	"signUp.email.invalid": "Valor inválido",
+	"signUp.fullName.label": "Nombre Completo",
+	"signUp.companyName.label": "Nombre de la Compañía",
+	"signUp.submitButton": "Crear Cuenta",
+	"signUp.legal.start": "Al registrarse, estás de acuerdo con los",
+	"signUp.legal.terms": "Términos",
+	"signUp.legal.privacyPolicy": "Política de Privacidad",
+};
